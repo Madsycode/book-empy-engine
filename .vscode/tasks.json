@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "Empy-Debug",
+      "problemMatcher": ["$gcc"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+
+      "windows": {
+        "args": ["Debug"],
+        "command": "${workspaceFolder}/EmpyWin.bat"
+      },
+
+      "linux": {
+        "sudo": true,
+        "args": ["Debug"],
+        "command": "${workspaceFolder}/EmpyLinux.sh"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "Empy-Release",
+      "problemMatcher": ["$gcc"],
+      "group": { "kind": "build" },
+      "options": { "cwd": "${workspaceFolder}" },
+
+      "windows": {
+        "args": ["Release"],
+        "command": "${workspaceFolder}/EmpyWin.bat"
+      },
+
+      "linux": {
+        "sudo": true,
+        "args": ["Release"],
+        "command": "${workspaceFolder}/EmpyLinux.sh"
+      }
+    }
+  ]
+}

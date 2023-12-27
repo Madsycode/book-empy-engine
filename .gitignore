@@ -1,0 +1,18 @@
+# Windows
+.vs/
+Build/
+Target/
+Targets/
+
+# Files
+dna.txt
+/*.sql
+*.doc
+.gittoken
+settings.json
+*.log
+*.user
+**.sln
+**.vcxproj
+**.vcxproj.user
+**.vcxproj.filters
