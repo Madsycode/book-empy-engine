@@ -2,7 +2,8 @@
     "configurations": [
         {
             "includePath": [ 
-                "C:/Users/pouhela/.conan/data/spdlog/1.12.0/_/_/package/7a4b7dbecf529c983055e2bf9c7700819db975cc/include",            
+                "C:/Users/pouhela/.conan/data/spdlog/1.12.0/_/_/package/7a4b7dbecf529c983055e2bf9c7700819db975cc/include",     
+                "C:/Users/pouhela/.conan/data/fmt/10.0.0/_/_/package/2c52a23dc25833dd4323e8144302393f0061b96b/include",
                 "${workspaceFolder}/EmpyEngine/includes",
                 "${workspaceFolder}/EmpyEditor/src",
                 "${workspaceFolder}/EmpyGame/src"
