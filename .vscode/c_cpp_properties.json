@@ -3,6 +3,8 @@
         {
             "includePath": [ 
                 "C:/Users/pouhela/.conan/data/spdlog/1.12.0/_/_/package/7a4b7dbecf529c983055e2bf9c7700819db975cc/include",            
+                "C:/Users/pouhela/.conan/data/fmt/10.0.0/_/_/package/2c52a23dc25833dd4323e8144302393f0061b96b/include",
+                "C:/Users/pouhela/.conan/data/glfw/3.3.8/_/_/package/31c2c71c44814e8d984537ce6956786f6cc9028a/include",
                 "${workspaceFolder}/EmpyEngine/includes",
                 "${workspaceFolder}/EmpyEditor/src",
                 "${workspaceFolder}/EmpyGame/src"
