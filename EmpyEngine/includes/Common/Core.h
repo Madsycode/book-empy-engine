@@ -12,6 +12,18 @@
 #include <filesystem>
 #include <unordered_map>
 
+// include glew
+#define GLEW_STATIC
+#include <GL/glew.h>
+
+// include glm
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+
 // include spdlog
 #define FMT_HEADER_ONLY 
 #define SPDLOG_FMT_EXTERNAL

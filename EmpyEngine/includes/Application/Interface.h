@@ -7,6 +7,35 @@ namespace Empy
     {
         EMPY_INLINE virtual ~AppInterface() = default;
         
+        // create entity
+        template <typename Entt, typename... Args>
+        EMPY_INLINE Entt CreateEntt(Args&&... args) 
+        {            
+            EMPY_STATIC_ASSERT(std::is_base_of<Entity, Entt>::value);
+            return std::move(Entt(&m_Context->Scene, std::forward<Args>(args)...));
+        }       
+
+        // convert id to entity
+        template<typename Entt>
+        EMPY_INLINE Entt ToEntt(EntityID entity) 
+        { 
+            EMPY_STATIC_ASSERT(std::is_base_of<Entity, Entt>::value);
+            return std::move(Entt(&m_Context->Scene, entity)); 
+        }
+
+        // loop through entities
+        template<typename Entt, typename Comp, typename Task>
+        EMPY_INLINE void EnttView(Task&& task) 
+        {
+            EMPY_STATIC_ASSERT(std::is_base_of<Entity, Entt>::value);
+            m_Context->Scene.view<Comp>().each([this, &task] (auto entity, auto& comp) 
+            { 
+                task(std::move(Entt(&m_Context->Scene, entity)), comp);
+            });
+        }
+        
+        // --
+
         // attach event callback
         template <typename Event, typename Callback>
         EMPY_INLINE void AttachCallback(Callback&& callback) 
