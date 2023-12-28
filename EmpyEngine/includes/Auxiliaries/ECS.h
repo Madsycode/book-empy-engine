@@ -48,6 +48,7 @@ namespace Empy
     { 
         EMPY_INLINE ModelComponent(const ModelComponent&) = default;
         EMPY_INLINE ModelComponent() = default; 
+        Material3D Material; 
         Model3D Model; 
     };
 
@@ -56,6 +57,7 @@ namespace Empy
     { 
         EMPY_INLINE MeshComponent(const MeshComponent&) = default;
         EMPY_INLINE MeshComponent() = default; 
+        Material3D Material; 
         Mesh3D Mesh; 
     };
     

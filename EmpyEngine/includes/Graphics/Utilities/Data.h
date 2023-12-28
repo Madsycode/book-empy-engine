@@ -3,6 +3,18 @@
 
 namespace Empy
 {
+    // material
+   struct Material3D 
+   {
+        EMPY_INLINE Material3D(const Material3D&) = default;
+        EMPY_INLINE Material3D() = default; 
+
+        glm::vec3 Specular = glm::vec3(0.8f, 0.5f, 0.6f);
+        glm::vec3 Diffuse = glm::vec3(1.0f, 0.5f, 0.3f);
+        glm::vec3 Ambient = glm::vec3(0.03f);
+        float Shininess = 1.0f;
+    };
+
     // point light
     struct PointLight 
     {
