@@ -43,6 +43,15 @@ namespace Empy
         std::string Name = "Untitled"; 
     };
 
+    // model component
+    struct ModelComponent 
+    { 
+        EMPY_INLINE ModelComponent(const ModelComponent&) = default;
+        EMPY_INLINE ModelComponent() = default; 
+        Material3D Material; 
+        Model3D Model; 
+    };
+
     // mesh component
     struct MeshComponent 
     { 

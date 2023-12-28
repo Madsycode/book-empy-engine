@@ -30,10 +30,11 @@ namespace Empy
             camera.Attach<TransformComponent>().Transform.Translate.z = 2.0f;
             camera.Attach<CameraComponent>();
 
-            // create quad entity
-            auto quad = CreateEntt<Entity>();
-            quad.Attach<MeshComponent>().Mesh = CreateQuad3D();
-            quad.Attach<TransformComponent>();
+            // create cube entity
+            auto model = std::make_shared<Model>("Resources/Models/cube.fbx");
+            auto cube = CreateEntt<Entity>();
+            cube.Attach<TransformComponent>().Transform.Rotation.y = 30;
+            cube.Attach<ModelComponent>().Model = model;
 
             while(m_Context->Window->PollEvents())
             {
@@ -48,11 +49,11 @@ namespace Empy
                     });
 
                     // render models
-                    EnttView<Entity, MeshComponent>([this] (auto entity, auto& comp) 
+                    EnttView<Entity, ModelComponent>([this] (auto entity, auto& comp) 
                     {      
                         auto& transform = entity.template Get<TransformComponent>().Transform;
-                        m_Context->Renderer->Draw(comp.Mesh, transform);
-                    });
+                        m_Context->Renderer->Draw(comp.Model, transform);
+                    });                   
                 }
                 m_Context->Renderer->EndFrame();            
 

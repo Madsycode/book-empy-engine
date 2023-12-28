@@ -22,6 +22,11 @@ namespace Empy
             m_Frame = std::make_unique<FrameBuffer>(width, height);  
         }
 
+        EMPY_INLINE void Draw(Model3D& model, Transform3D& transform)
+        {
+            m_Phong->Draw(model, transform);
+        }
+
         EMPY_INLINE void Draw(Mesh3D& mesh, Transform3D& transform)
         {
             m_Phong->Draw(mesh, transform);

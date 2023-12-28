@@ -19,6 +19,12 @@ namespace Empy
             glUniformMatrix4fv(u_View, 1, GL_FALSE, glm::value_ptr(camera.View(transform)));
         }   
 
+        EMPY_INLINE void Draw(Model3D& model, Transform3D& transform)
+        {
+            glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));            
+            model->Draw(GL_TRIANGLES);        
+        }
+
         EMPY_INLINE void Draw(Mesh3D& mesh, Transform3D& transform)
         {
             glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));            

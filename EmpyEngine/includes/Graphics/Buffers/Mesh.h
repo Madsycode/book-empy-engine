@@ -97,4 +97,8 @@ namespace Empy
 		uint32_t m_NbrIndex = 0u;
 		uint32_t m_BufferID = 0u;
 	};
+
+	// 3d mesh
+    using ShadedMesh = Mesh<ShadedVertex>;
+	using Mesh3D = std::shared_ptr<ShadedMesh>;
 }

@@ -1,12 +1,8 @@
 #pragma once
-#include "../Buffers/Mesh.h"
+#include "../Models/Model.h"
 
 namespace Empy
 {
-    // 3d mesh
-    using ShadedMesh = Mesh<ShadedVertex>;
-	using Mesh3D = std::unique_ptr<ShadedMesh>;
-
     // material
    struct Material3D 
    {
