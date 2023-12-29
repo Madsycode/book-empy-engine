@@ -3,16 +3,6 @@
 
 namespace Empy
 {
-    // point light
-    struct PointLight 
-    {
-        EMPY_INLINE PointLight(const PointLight&) = default;
-        EMPY_INLINE PointLight() = default; 
-        
-        glm::vec3 Radiance = glm::vec3(1.0f);
-        float Intensity = 1.0f;
-    };
-
     // transform
     struct Transform3D
     {
