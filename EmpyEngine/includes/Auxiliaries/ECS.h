@@ -11,14 +11,6 @@ namespace Empy
 
     // ++
 
-    // point light component
-    struct PointLightComponent 
-    {
-        EMPY_INLINE PointLightComponent(const PointLightComponent&) = default;
-        EMPY_INLINE PointLightComponent() = default; 
-        PointLight Light;
-    };
-
     // transform component
     struct TransformComponent 
     {
