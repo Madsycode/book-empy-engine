@@ -1,7 +1,7 @@
 #pragma once
 #include "Buffers/Frame.h"
-#include "Shaders/Phong.h"
 #include "Shaders/Final.h"
+#include "Shaders/PBR.h"
 
 namespace Empy
 {
@@ -17,24 +17,24 @@ namespace Empy
             }
             glewExperimental = GL_TRUE;
 
-            m_Phong = std::make_unique<PhongShader>("Resources/Shaders/phong.glsl");
+            m_Pbr = std::make_unique<PbrShader>("Resources/Shaders/pbr.glsl");
             m_Final = std::make_unique<FinalShader>("Resources/Shaders/final.glsl");
             m_Frame = std::make_unique<FrameBuffer>(width, height);  
         }
 
         EMPY_INLINE void Draw(Model3D& model, Transform3D& transform)
         {
-            m_Phong->Draw(model, transform);
+            m_Pbr->Draw(model, transform);
         }
 
         EMPY_INLINE void Draw(Mesh3D& mesh, Transform3D& transform)
         {
-            m_Phong->Draw(mesh, transform);
+            m_Pbr->Draw(mesh, transform);
         }
 
         EMPY_INLINE void SetCamera(Camera3D& camera, Transform3D& transform)
         {
-            m_Phong->SetCamera(camera, transform, m_Frame->Ratio());
+            m_Pbr->SetCamera(camera, transform, m_Frame->Ratio());
         }
         
         EMPY_INLINE void Resize(int32_t width, int32_t height) 
@@ -57,18 +57,18 @@ namespace Empy
         EMPY_INLINE void NewFrame()
         {
             m_Frame->Begin();   
-            m_Phong->Bind();      
+            m_Pbr->Bind();      
         }     
 
         EMPY_INLINE void EndFrame()
         {
-            m_Phong->Unbind();      
+            m_Pbr->Unbind();      
             m_Frame->End();
         }   
 
     private:
         std::unique_ptr<FrameBuffer> m_Frame;
-        std::unique_ptr<PhongShader> m_Phong;
         std::unique_ptr<FinalShader> m_Final;
+        std::unique_ptr<PbrShader> m_Pbr;
     };
 }
