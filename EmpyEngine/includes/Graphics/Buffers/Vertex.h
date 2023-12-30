@@ -28,7 +28,7 @@ namespace Empy
 	template <typename Vertex> 
 	struct MeshData
 	{
-		std::vector<Vertex> Vertices;
 		std::vector<uint32_t> Indices;
+		std::vector<Vertex> Vertices;
 	};
 }

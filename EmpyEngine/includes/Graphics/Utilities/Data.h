@@ -3,16 +3,15 @@
 
 namespace Empy
 {
-    // material
-   struct Material3D 
-   {
-        EMPY_INLINE Material3D(const Material3D&) = default;
-        EMPY_INLINE Material3D() = default; 
+    // pbr material
+    struct PbrMaterial 
+    {
+        EMPY_INLINE PbrMaterial(const PbrMaterial&) = default;
+        EMPY_INLINE PbrMaterial() = default;
 
-        glm::vec3 Specular = glm::vec3(0.8f, 0.5f, 0.6f);
-        glm::vec3 Diffuse = glm::vec3(1.0f, 0.5f, 0.3f);
-        glm::vec3 Ambient = glm::vec3(0.03f);
-        float Shininess = 1.0f;
+        glm::vec3 Albedo = glm::vec3(0.3f, 0.8f, 0.8f);
+        float Roughness = 0.5f;
+        float Metallic = 0.2f;
     };
 
     // point light
@@ -22,7 +21,29 @@ namespace Empy
         EMPY_INLINE PointLight() = default; 
         
         glm::vec3 Radiance = glm::vec3(1.0f);
-        float Intensity = 1.0f;
+        float Intensity = 10.0f;
+    };
+
+    // point light
+    struct SpotLight 
+    {
+        EMPY_INLINE SpotLight(const SpotLight&) = default;
+        EMPY_INLINE SpotLight() = default; 
+        
+        glm::vec3 Radiance = glm::vec3(1.0f);
+        float Intensity = 3.5f;
+		float FallOff = 60.5f;
+        float CutOff = 20.0f;
+    };
+
+    // directional light
+    struct DirectLight 
+    {
+        EMPY_INLINE DirectLight(const DirectLight&) = default;
+        EMPY_INLINE DirectLight() = default; 
+        
+        glm::vec3 Radiance = glm::vec3(1.0f);
+        float Intensity = 2.0f;
     };
 
     // transform

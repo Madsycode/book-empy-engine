@@ -11,6 +11,7 @@ dna.txt
 .gittoken
 settings.json
 *.log
+*.tex
 *.user
 **.sln
 **.vcxproj

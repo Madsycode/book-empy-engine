@@ -28,7 +28,8 @@ namespace Empy
         EMPY_INLINE void EnttView(Task&& task) 
         {
             EMPY_STATIC_ASSERT(std::is_base_of<Entity, Entt>::value);
-            m_Context->Scene.view<Comp>().each([this, &task] (auto entity, auto& comp) 
+            m_Context->Scene.view<Comp>().each([this, &task] 
+            (auto entity, auto& comp) 
             { 
                 task(std::move(Entt(&m_Context->Scene, entity)), comp);
             });

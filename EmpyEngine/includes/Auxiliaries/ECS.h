@@ -10,6 +10,14 @@ namespace Empy
     constexpr EntityID NENTT = entt::null;
 
     // ++
+    
+    // direct light component
+    struct DirectLightComponent 
+    {
+        EMPY_INLINE DirectLightComponent(const DirectLightComponent&) = default;
+        EMPY_INLINE DirectLightComponent() = default; 
+        DirectLight Light;
+    };
 
     // point light component
     struct PointLightComponent 
@@ -17,6 +25,14 @@ namespace Empy
         EMPY_INLINE PointLightComponent(const PointLightComponent&) = default;
         EMPY_INLINE PointLightComponent() = default; 
         PointLight Light;
+    };
+
+    // point light component
+    struct SpotLightComponent 
+    {
+        EMPY_INLINE SpotLightComponent(const SpotLightComponent&) = default;
+        EMPY_INLINE SpotLightComponent() = default; 
+        SpotLight Light;
     };
 
     // transform component
@@ -48,7 +64,7 @@ namespace Empy
     { 
         EMPY_INLINE ModelComponent(const ModelComponent&) = default;
         EMPY_INLINE ModelComponent() = default; 
-        Material3D Material; 
+        PbrMaterial Material; 
         Model3D Model; 
     };
 
@@ -57,7 +73,7 @@ namespace Empy
     { 
         EMPY_INLINE MeshComponent(const MeshComponent&) = default;
         EMPY_INLINE MeshComponent() = default; 
-        Material3D Material; 
+        PbrMaterial Material; 
         Mesh3D Mesh; 
     };
     

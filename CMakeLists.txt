@@ -22,5 +22,5 @@ endif()
 # project subdirectories
 add_subdirectory(EmpyEngine)
 add_subdirectory(EmpyEditor)
-add_subdirectory(EmpyGame)
+#add_subdirectory(EmpyGame)
 
