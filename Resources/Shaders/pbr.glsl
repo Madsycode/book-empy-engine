@@ -7,6 +7,7 @@ out Vertex
 {
   vec3 Position;
   vec3 Normal;
+  vec2 UVs;
 } vertex;
 
 uniform mat4 u_model;
@@ -15,9 +16,10 @@ uniform mat4 u_view;
  
 void main() 
 {       
-  vertex.Normal = a_normal;
+  vertex.UVs = a_uvs;
+  vertex.Normal = mat3(u_model) * a_normal;
   vertex.Position = vec3(u_model * vec4(a_position, 1.0));
-  gl_Position = u_proj * u_view * vec4(vertex.Position, 1.0);
+  gl_Position = u_proj * u_view * u_model * vec4(a_position, 1.0);
 }
 
 ++VERTEX++
@@ -29,19 +31,12 @@ layout (location = 0) out vec4 out_fragment;
 #define PI 3.14159265358979323846
 #define MAX_LIGHTS 10
 
-// input vertex
-in Vertex
+// direct light type
+struct DirectLight
 {
-  vec3 Position;
-  vec3 Normal;
-} vertex;
-
-// material type
-struct Material
-{
-  float Roughness;
-  float Metallic;
-  vec3 Albedo;
+  float Intensity;
+  vec3 Direction;
+  vec3 Radiance;
 };
 
 // point light type
@@ -49,14 +44,6 @@ struct PointLight
 {
   float Intensity;
   vec3 Position;
-  vec3 Radiance;
-};
-
-// direct light type
-struct DirectLight
-{
-  float Intensity;
-  vec3 Direction;
   vec3 Radiance;
 };
 
@@ -71,6 +58,26 @@ struct SpotLight
   float CutOff;
 };
 
+// material type
+struct Material
+{
+  sampler2D RoughnessMap;
+  sampler2D MetallicMap;
+  sampler2D NormalMap;
+  sampler2D AlbedoMap;
+  float Roughness;
+  float Metallic;
+  vec3 Albedo;
+};
+
+// input vertex
+in Vertex
+{
+  vec3 Position;
+  vec3 Normal;
+  vec2 UVs;
+} vertex;
+
 // point light uniforms
 uniform DirectLight u_directLights[MAX_LIGHTS]; 
 uniform int u_nbrDirectLight; 
@@ -83,6 +90,7 @@ uniform int u_nbrPointLight;
 uniform SpotLight u_spotLights[MAX_LIGHTS]; 
 uniform int u_nbrSpotLight; 
 
+//uniform sampler2D u_albedoMap;
 uniform Material u_material; 
 uniform vec3 u_viewPos;
 
@@ -124,7 +132,7 @@ float GeometrySmithGGX(float NdotV, float NdotL, float roughness)
 }
 
 // compute direct lights
-vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0) 
+vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness) 
 {
   vec3 result = vec3(0.0);
 
@@ -137,9 +145,9 @@ vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0)
     vec3 H = normalize(L + V);
 
     // Cook-Torrance (BRDF)
-    float NDF = DistributionGGX(N, H, u_material.Roughness);   
+    float NDF = DistributionGGX(N, H, roughness);   
     vec3 FS = FresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
-    float GS = GeometrySmithGGX(NdotV, NdotL, u_material.Roughness);      
+    float GS = GeometrySmithGGX(NdotV, NdotL, roughness);      
 
     // diffuse light
     vec3 diffuse = (vec3(1.0) - FS) * (1.0 - u_material.Metallic);
@@ -148,8 +156,8 @@ vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0)
     vec3 specular = (NDF * GS * FS) / max(4.0 * NdotV * NdotL, 0.0001); 
     
     // combine components
-    result += (diffuse * u_material.Albedo / PI + specular) * 
-    u_directLights[i].Radiance * NdotL * u_directLights[i].Intensity; 
+    result += (diffuse * albedo / PI + specular) * u_directLights[i].Radiance * 
+    NdotL * u_directLights[i].Intensity; 
 
     // break if max light
     if (i >= MAX_LIGHTS - 1) { break; }
@@ -159,7 +167,7 @@ vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0)
 }
 
 // compute point lights
-vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0) 
+vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness) 
 {
   vec3 result = vec3(0.0);
 
@@ -172,9 +180,9 @@ vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0)
     vec3 H = normalize(L + V);
 
     // Cook-Torrance (BRDF)
-    float NDF = DistributionGGX(N, H, u_material.Roughness);   
+    float NDF = DistributionGGX(N, H, roughness);   
     vec3 FS = FresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
-    float GS = GeometrySmithGGX(NdotV, NdotL, u_material.Roughness);      
+    float GS = GeometrySmithGGX(NdotV, NdotL, roughness);      
 
     // diffuse light
     vec3 diffuse = (vec3(1.0) - FS) * (1.0 - u_material.Metallic);
@@ -187,8 +195,8 @@ vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0)
     float attenuation = u_pointLights[i].Intensity / (distance * distance); 
 
     // combine components
-    result += (diffuse * u_material.Albedo / PI + specular) * 
-    u_pointLights[i].Radiance * attenuation * NdotL; 
+    result += (diffuse * albedo / PI + specular) * u_pointLights[i].Radiance * 
+    attenuation * NdotL; 
 
     // break if max light
     if (i >= MAX_LIGHTS - 1) { break; }
@@ -198,7 +206,7 @@ vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0)
 }
 
 // compute spot lights
-vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0) 
+vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness) 
 {
   vec3 result = vec3(0.0);
 
@@ -211,9 +219,9 @@ vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0)
     vec3 H = normalize(L + V);
 
     // Cook-Torrance (BRDF)
-    float NDF = DistributionGGX(N, H, u_material.Roughness);   
+    float NDF = DistributionGGX(N, H, roughness);   
     vec3 FS = FresnelSchlick(clamp(dot(H, V), 0.0, 1.0), F0);
-    float GS = GeometrySmithGGX(NdotV, NdotL, u_material.Roughness);      
+    float GS = GeometrySmithGGX(NdotV, NdotL, roughness);      
 
     // diffuse light
     vec3 diffuse = (vec3(1.0) - FS) * (1.0 - u_material.Metallic);
@@ -231,9 +239,8 @@ vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0)
     float attenuation = u_spotLights[i].Intensity / (distance * distance); 
 
     // combine components
-    result += (diffuse * u_material.Albedo / PI + specular) * 
-    u_spotLights[i].Radiance * u_spotLights[i].Intensity * 
-    attenuation * NdotL * spotFactor; 
+    result += (diffuse * albedo / PI + specular) * u_spotLights[i].Radiance * 
+    u_spotLights[i].Intensity * attenuation * NdotL * spotFactor; 
 
     // break if max light
     if (i >= MAX_LIGHTS - 1) { break; }
@@ -251,13 +258,19 @@ void main()
   // camera view direction
   vec3 V = normalize(u_viewPos - vertex.Position);
 
+  // material albedo + albedo-map
+  vec3 albedo = (u_material.Albedo + texture(u_material.AlbedoMap, vertex.UVs).rgb);
+
+  // material roughness + roughness-map
+  float roughness = (u_material.Roughness + texture(u_material.RoughnessMap, vertex.UVs).r);
+
   // fresnel base reflectivity
-	vec3 F0 = mix(vec3(0.04), u_material.Albedo, u_material.Metallic);  
+	vec3 F0 = mix(vec3(0.04), albedo, u_material.Metallic);  
 
   // point lights contribution
-  vec3 result = ComputeDirectLights(N, V, F0);
-  result += ComputePointLights(N, V, F0);
-  result += ComputeSpotLights(N, V, F0);
+  vec3 result = ComputeDirectLights(N, V, F0, albedo, roughness);
+  result += ComputePointLights(N, V, F0, albedo, roughness);
+  result += ComputeSpotLights(N, V, F0, albedo, roughness);
 
   // final color calculation
   out_fragment = vec4(result, 1.0);

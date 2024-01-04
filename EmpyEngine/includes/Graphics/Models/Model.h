@@ -18,16 +18,16 @@ namespace Empy
 
         EMPY_INLINE void Load(const std::string& filename)
         {
-            Assimp::Importer importer;
 			uint32_t flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace |
-				aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_ValidateDataStructure |
-				aiProcess_ImproveCacheLocality | aiProcess_FixInfacingNormals | 
-				aiProcess_GenUVCoords | aiProcess_FlipUVs;
+			aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_ValidateDataStructure |
+			aiProcess_ImproveCacheLocality | aiProcess_FixInfacingNormals | 
+			aiProcess_GenUVCoords | aiProcess_FlipUVs;
 
+            Assimp::Importer importer;
 			const aiScene* ai_scene = importer.ReadFile(filename, flags);
 
 			if (!ai_scene || ai_scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !ai_scene->mRootNode) {
-				EMPY_ERROR("failed to load model: {}", importer.GetErrorString());
+				EMPY_ERROR("failed to load model-{}", importer.GetErrorString());
 				return;
 			}
 
@@ -59,6 +59,7 @@ namespace Empy
 
         EMPY_INLINE void ParseMesh(aiMesh* ai_mesh) 
         {
+			// mesh data
 			MeshData<ShadedVertex> data;
 
 			// vertices
@@ -76,7 +77,7 @@ namespace Empy
 				vertex.UVs.x = ai_mesh->mTextureCoords[0][i].x;
 				vertex.UVs.y = ai_mesh->mTextureCoords[0][i].y;
 
-				// push to array
+				// push vertex
 				data.Vertices.push_back(vertex);
 			}
 
@@ -90,8 +91,7 @@ namespace Empy
 			}
 
             // create new mesh instance
-            auto mesh = std::make_unique<ShadedMesh>(data);
-			m_Meshes.push_back(std::move(mesh));
+			m_Meshes.push_back(std::make_unique<ShadedMesh>(data));
 		}
 
     private:

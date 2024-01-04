@@ -25,8 +25,14 @@ namespace Empy
 
         EMPY_INLINE void RunContext() 
         {
-            auto model1 = std::make_shared<Model>("Resources/Models/cube.fbx");
-            auto model2 = std::make_shared<Model>("Resources/Models/sphere.fbx");
+            // load textures
+            auto roughness = std::make_shared<Texture2D>("Resources/Textures/Marble/Roughness.jpg");
+            auto albedo = std::make_shared<Texture2D>("Resources/Textures/Marble/Albedo.jpg");
+            auto normal = std::make_shared<Texture2D>("Resources/Textures/Marble/Normal.jpg");
+
+            // load models
+            auto sphereModel = std::make_shared<Model>("Resources/Models/sphere.fbx");
+            auto cubeModel = std::make_shared<Model>("Resources/Models/cube.fbx");
 
             // create scene camera
             auto camera = CreateEntt<Entity>();                    
@@ -35,17 +41,25 @@ namespace Empy
 
             // create point light 1      
             auto slight = CreateEntt<Entity>();                    
-            slight.Attach<SpotLightComponent>();
+            slight.Attach<DirectLightComponent>();
             auto& stp = slight.Attach<TransformComponent>().Transform;
             stp.Rotation = glm::vec3(0.0f, 0.0f, -1.0f);
             stp.Translate.z = 1.0f;
 
             // create cube entity
             auto cube = CreateEntt<Entity>();
-            cube.Attach<ModelComponent>().Model = model1;
-            auto& t = cube.Attach<TransformComponent>().Transform;
-            t.Scale = glm::vec3(3.0f, 3.0f, 1.0f);
-            t.Translate.z = -1.0f;
+            auto& mod = cube.Attach<ModelComponent>();
+            
+            mod.Model = sphereModel;
+            mod.Material.Metallic = 0.5f;        // <--- set roughness map
+            mod.Material.Roughness = 0.0f;        // <--- set roughness map
+            mod.Material.Albedo = glm::vec3(0.0f); 
+
+            //mod.Material.RoughnessMap = roughness; 
+            mod.Material.AlbedoMap = albedo;      
+            mod.Material.NormalMap = normal;       
+
+            cube.Attach<TransformComponent>().Transform.Scale *= 2.0f;
 
             // application main loop
             while(m_Context->Window->PollEvents())
@@ -98,6 +112,17 @@ namespace Empy
                 {      
                     auto& transform = entity.template Get<TransformComponent>().Transform;
                     m_Context->Renderer->Draw(comp.Model, comp.Material, transform);                
+                    
+                    if(m_Context->Window->IsKey(GLFW_KEY_A))
+                        transform.Translate.x -= 0.05f;
+                    if(m_Context->Window->IsKey(GLFW_KEY_D))
+                        transform.Translate.x += 0.05f;
+                    if(m_Context->Window->IsKey(GLFW_KEY_W))
+                        transform.Translate.y += 0.05f;
+                    if(m_Context->Window->IsKey(GLFW_KEY_S))
+                        transform.Translate.y -= 0.05f;
+                    
+                    transform.Rotation.y -= 0.05f;                    
                 });  
 
                 // end frame                

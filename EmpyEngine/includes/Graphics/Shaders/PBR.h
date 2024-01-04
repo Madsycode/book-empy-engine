@@ -11,12 +11,17 @@ namespace Empy
             u_NbrDirectLight = glGetUniformLocation(m_ShaderID, "u_nbrDirectLight");
             u_NbrPointLight = glGetUniformLocation(m_ShaderID, "u_nbrPointLight");
             u_NbrSpotLight = glGetUniformLocation(m_ShaderID, "u_nbrSpotLight");
-            u_ViewPos = glGetUniformLocation(m_ShaderID, "u_viewPos");
+
+            u_RoughnessMap = glGetUniformLocation(m_ShaderID, "u_material.RoughnessMap");
+            u_MetallicMap = glGetUniformLocation(m_ShaderID, "u_material.MetallicMap");
+            u_AlbedoMap = glGetUniformLocation(m_ShaderID, "u_material.AlbedoMap");
+            u_NormalMap = glGetUniformLocation(m_ShaderID, "u_material.NormalMap");
 
             u_Roughness = glGetUniformLocation(m_ShaderID, "u_material.Roughness");
             u_Metallic = glGetUniformLocation(m_ShaderID, "u_material.Metallic");
             u_Albedo = glGetUniformLocation(m_ShaderID, "u_material.Albedo");
 
+            u_ViewPos = glGetUniformLocation(m_ShaderID, "u_viewPos");
             u_Model = glGetUniformLocation(m_ShaderID, "u_model");
             u_View = glGetUniformLocation(m_ShaderID, "u_view");
             u_Proj = glGetUniformLocation(m_ShaderID, "u_proj");
@@ -29,10 +34,10 @@ namespace Empy
             std::string radiance = "u_directLights[" + std::to_string(index) + "].Radiance";
 
             uint32_t u_intensity = glGetUniformLocation(m_ShaderID, intensity.c_str());
-            uint32_t u_position = glGetUniformLocation(m_ShaderID, direction.c_str());
+            uint32_t u_direction = glGetUniformLocation(m_ShaderID, direction.c_str());
             uint32_t u_radiance = glGetUniformLocation(m_ShaderID, radiance.c_str());
 
-            glUniform3fv(u_position, 1, &transform.Rotation.x);
+            glUniform3fv(u_direction, 1, &transform.Rotation.x);
             glUniform3fv(u_radiance, 1, &light.Radiance.x);
             glUniform1f(u_intensity, light.Intensity);
         }
@@ -70,18 +75,29 @@ namespace Empy
 
             glUniform3fv(u_direction, 1, &transform.Rotation.x);
             glUniform3fv(u_position, 1, &transform.Translate.x);
+            glUniform3fv(u_radiance, 1, &light.Radiance.x);
+
             glUniform1f(u_falloff, glm::radians(light.FallOff));
             glUniform1f(u_cutoff, glm::radians(light.CutOff));
-            glUniform3fv(u_radiance, 1, &light.Radiance.x);
             glUniform1f(u_intensity, light.Intensity);
         }
 
         EMPY_INLINE void Draw(Model3D& model, PbrMaterial& material, Transform3D& transform)
         {
-            glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));            
+            glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));   
+                     
             glUniform3fv(u_Albedo, 1, &material.Albedo.x);
             glUniform1f(u_Roughness, material.Roughness);
             glUniform1f(u_Metallic, material.Metallic);
+
+            // material maps
+            int32_t unit = 0;
+            if(material.AlbedoMap) { material.AlbedoMap->Use(u_AlbedoMap, unit++); }
+            if(material.NormalMap) { material.AlbedoMap->Use(u_AlbedoMap, unit++); }
+            if(material.MetallicMap) { material.AlbedoMap->Use(u_MetallicMap, unit++); }
+            if(material.RoughnessMap) { material.AlbedoMap->Use(u_RoughnessMap, unit++); }
+
+            // render model
             model->Draw(GL_TRIANGLES);        
         }
 
@@ -111,12 +127,17 @@ namespace Empy
         uint32_t u_NbrDirectLight = 0u;
         uint32_t u_NbrPointLight = 0u;
         uint32_t u_NbrSpotLight = 0u;
-        uint32_t u_ViewPos = 0u;
-
+        // --
+        uint32_t u_RoughnessMap = 0u;
+        uint32_t u_MetallicMap = 0u;
+        uint32_t u_AlbedoMap = 0u;
+        uint32_t u_NormalMap = 0u;
+        // --
         uint32_t u_Roughness = 0u;
         uint32_t u_Metallic = 0u;
         uint32_t u_Albedo = 0u;
-
+        //--
+        uint32_t u_ViewPos = 0u;
         uint32_t u_Model = 0u;
         uint32_t u_View = 0u;
         uint32_t u_Proj = 0u;

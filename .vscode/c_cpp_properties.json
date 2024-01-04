@@ -2,6 +2,7 @@
     "configurations": [
         {
             "includePath": [ 
+                "C:/Users/pouhela/.conan/data/stb/cci.20230920/_/_/package/9d3d9aac798392dbe5b8ddad56d332bc432631ac/include",
                 "C:/Users/pouhela/.conan/data/glm/cci.20230113/_/_/package/5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9/include",
                 "C:/Users/pouhela/.conan/data/spdlog/1.12.0/_/_/package/7a4b7dbecf529c983055e2bf9c7700819db975cc/include",            
                 "C:/Users/pouhela/.conan/data/assimp/5.2.2/_/_/package/bc5b154e9d314f0f999265ddac74cb733c887b40/include",

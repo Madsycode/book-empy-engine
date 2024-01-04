@@ -3,26 +3,25 @@
 
 namespace Empy
 {
-	// mesh vertex buffer
-	template <typename Vertex> 
-    struct Mesh
+	template <typename Vertex> struct Mesh
 	{
 		EMPY_INLINE Mesh(const MeshData<Vertex>& data) 
 		{
+			// check vertices
 			if(data.Vertices.empty())
             {
-                EMPY_ERROR("Mesh()! empty mesh data");
+                EMPY_ERROR("empty mesh data!");
                 return;
             }
 
-			// number of ertices and indices
+			// number of vertices and indices
 			m_NbrVertex = data.Vertices.size();
 			m_NbrIndex = data.Indices.size();
 
 			// generate vrtex buffer array
 			glGenVertexArrays(1, &m_BufferID);
 
-			// active/bind vertex array
+			// activate/bind vertex array
 			glBindVertexArray(m_BufferID);
 
 			// create vertex buffer
@@ -32,7 +31,7 @@ namespace Empy
 			glBufferData(GL_ARRAY_BUFFER, m_NbrVertex * 
 			sizeof(Vertex), data.Vertices.data(), GL_STATIC_DRAW);
 
-			// create element buffer 
+			// create index buffer 
 			if(m_NbrIndex != 0u) 
 			{
 				uint32_t EBO = 0u;
