@@ -2,11 +2,14 @@
 layout (location = 0) in vec3 a_position;
 layout (location = 1) in vec3 a_normal;
 layout (location = 2) in vec2 a_uvs;
+layout (location = 3) in vec3 a_tangent;
+layout (location = 4) in vec3 a_bitangent;
 
 out Vertex
 {
   vec3 Position;
   vec3 Normal;
+  mat3 TBN;
   vec2 UVs;
 } vertex;
 
@@ -20,6 +23,7 @@ void main()
   vertex.Normal = mat3(u_model) * a_normal;
   vertex.Position = vec3(u_model * vec4(a_position, 1.0));
   gl_Position = u_proj * u_view * u_model * vec4(a_position, 1.0);
+  vertex.TBN = mat3(u_model) * mat3(a_tangent, a_bitangent, a_normal);
 }
 
 ++VERTEX++
@@ -62,9 +66,17 @@ struct SpotLight
 struct Material
 {
   sampler2D RoughnessMap;
+  bool UseRoughnessMap;
+
   sampler2D MetallicMap;
+  bool UseMetallicMap;
+
   sampler2D NormalMap;
+  bool UseNormalMap;
+
   sampler2D AlbedoMap;
+  bool UseAlbedoMap;
+
   float Roughness;
   float Metallic;
   vec3 Albedo;
@@ -75,6 +87,7 @@ in Vertex
 {
   vec3 Position;
   vec3 Normal;
+  mat3 TBN; // <-- added
   vec2 UVs;
 } vertex;
 
@@ -93,6 +106,18 @@ uniform int u_nbrSpotLight;
 //uniform sampler2D u_albedoMap;
 uniform Material u_material; 
 uniform vec3 u_viewPos;
+
+// computes surface normal
+vec3 ComputeSurfaceNormal()
+{
+  if(u_material.UseNormalMap) 
+  { 
+    // sample from map and convert from [0,1] range to [-1,1] range
+    vec3 normal = texture(u_material.NormalMap, vertex.UVs).rgb;
+    return normalize(vertex.TBN * normal * 2.0 - 1.0); 
+  }
+  return normalize(vertex.Normal);
+}
 
 // computes fresnel reflectivity
 vec3 FresnelSchlick(float cosTheta, vec3 F0) 
@@ -132,7 +157,7 @@ float GeometrySmithGGX(float NdotV, float NdotL, float roughness)
 }
 
 // compute direct lights
-vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness) 
+vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, float metallic) 
 {
   vec3 result = vec3(0.0);
 
@@ -150,7 +175,7 @@ vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness)
     float GS = GeometrySmithGGX(NdotV, NdotL, roughness);      
 
     // diffuse light
-    vec3 diffuse = (vec3(1.0) - FS) * (1.0 - u_material.Metallic);
+    vec3 diffuse = (vec3(1.0) - FS) * (1.0 - metallic);
 
     // specular light
     vec3 specular = (NDF * GS * FS) / max(4.0 * NdotV * NdotL, 0.0001); 
@@ -167,7 +192,7 @@ vec3 ComputeDirectLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness)
 }
 
 // compute point lights
-vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness) 
+vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, float metallic) 
 {
   vec3 result = vec3(0.0);
 
@@ -185,7 +210,7 @@ vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness)
     float GS = GeometrySmithGGX(NdotV, NdotL, roughness);      
 
     // diffuse light
-    vec3 diffuse = (vec3(1.0) - FS) * (1.0 - u_material.Metallic);
+    vec3 diffuse = (vec3(1.0) - FS) * (1.0 - metallic);
 
     // specular light
     vec3 specular = (NDF * GS * FS) / max(4.0 * NdotV * NdotL, 0.0001); 
@@ -206,7 +231,7 @@ vec3 ComputePointLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness)
 }
 
 // compute spot lights
-vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness) 
+vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, float metallic) 
 {
   vec3 result = vec3(0.0);
 
@@ -224,7 +249,7 @@ vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness)
     float GS = GeometrySmithGGX(NdotV, NdotL, roughness);      
 
     // diffuse light
-    vec3 diffuse = (vec3(1.0) - FS) * (1.0 - u_material.Metallic);
+    vec3 diffuse = (vec3(1.0) - FS) * (1.0 - metallic);
 
     // specular light
     vec3 specular = (NDF * GS * FS) / max(4.0 * NdotV * NdotL, 0.0001); 
@@ -252,25 +277,40 @@ vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness)
 // main function
 void main() 
 {
-  // normalized surface normal 
-  vec3 N = normalize(vertex.Normal);
+  // get surface normal
+  vec3 N = ComputeSurfaceNormal();
 
   // camera view direction
   vec3 V = normalize(u_viewPos - vertex.Position);
 
-  // material albedo + albedo-map
-  vec3 albedo = (u_material.Albedo + texture(u_material.AlbedoMap, vertex.UVs).rgb);
+  // material roughness
+  float roughness = u_material.Roughness;
+  if(u_material.UseRoughnessMap)
+  {
+    roughness = texture(u_material.RoughnessMap, vertex.UVs).r;
+  }
 
-  // material roughness + roughness-map
-  float roughness = (u_material.Roughness + texture(u_material.RoughnessMap, vertex.UVs).r);
+  // material metallic
+  float metallic = u_material.Metallic;
+  if(u_material.UseMetallicMap)
+  {
+    metallic = texture(u_material.MetallicMap, vertex.UVs).r;
+  }
 
-  // fresnel base reflectivity
-	vec3 F0 = mix(vec3(0.04), albedo, u_material.Metallic);  
+  // material albedo 
+  vec3 albedo = u_material.Albedo;
+  if(u_material.UseAlbedoMap)
+  {
+    albedo = texture(u_material.AlbedoMap, vertex.UVs).rgb;
+  }
 
-  // point lights contribution
-  vec3 result = ComputeDirectLights(N, V, F0, albedo, roughness);
-  result += ComputePointLights(N, V, F0, albedo, roughness);
-  result += ComputeSpotLights(N, V, F0, albedo, roughness);
+  // fresnel reflectivity
+  vec3 F0 = mix(vec3(0.04), albedo, metallic);  
+
+  // lights contribution
+  vec3 result = ComputeDirectLights(N, V, F0, albedo, roughness, metallic);
+  result += ComputePointLights(N, V, F0, albedo, roughness, metallic);
+  result += ComputeSpotLights(N, V, F0, albedo, roughness, metallic);
 
   // final color calculation
   out_fragment = vec4(result, 1.0);

@@ -26,9 +26,9 @@ namespace Empy
         EMPY_INLINE void RunContext() 
         {
             // load textures
-            auto roughness = std::make_shared<Texture2D>("Resources/Textures/Marble/Roughness.jpg");
-            auto albedo = std::make_shared<Texture2D>("Resources/Textures/Marble/Albedo.jpg");
-            auto normal = std::make_shared<Texture2D>("Resources/Textures/Marble/Normal.jpg");
+            auto roughness = std::make_shared<Texture2D>("Resources/Textures/Marble/Roughness.png");
+            auto albedo = std::make_shared<Texture2D>("Resources/Textures/Marble/Albedo.png");
+            auto normal = std::make_shared<Texture2D>("Resources/Textures/Marble/Normal.png");
 
             // load models
             auto sphereModel = std::make_shared<Model>("Resources/Models/sphere.fbx");
@@ -41,25 +41,25 @@ namespace Empy
 
             // create point light 1      
             auto slight = CreateEntt<Entity>();                    
-            slight.Attach<DirectLightComponent>();
+            slight.Attach<DirectLightComponent>().Light.Intensity = 5.0f;
             auto& stp = slight.Attach<TransformComponent>().Transform;
-            stp.Rotation = glm::vec3(0.0f, 0.0f, -1.0f);
+            stp.Rotation = glm::vec3(0.0f, 0.0f, -2.0f);
             stp.Translate.z = 1.0f;
 
             // create cube entity
             auto cube = CreateEntt<Entity>();
+            cube.Attach<TransformComponent>().Transform.Scale *= 2.5f;
             auto& mod = cube.Attach<ModelComponent>();
-            
             mod.Model = sphereModel;
-            mod.Material.Metallic = 0.5f;        // <--- set roughness map
-            mod.Material.Roughness = 0.0f;        // <--- set roughness map
+
+            mod.Material.Metallic = 0.25f;         
+            mod.Material.Roughness = 0.1f;      
             mod.Material.Albedo = glm::vec3(0.0f); 
 
-            //mod.Material.RoughnessMap = roughness; 
+            mod.Material.RoughnessMap = roughness; 
             mod.Material.AlbedoMap = albedo;      
             mod.Material.NormalMap = normal;       
 
-            cube.Attach<TransformComponent>().Transform.Scale *= 2.0f;
 
             // application main loop
             while(m_Context->Window->PollEvents())

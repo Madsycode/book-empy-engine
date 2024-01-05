@@ -47,6 +47,8 @@ namespace Empy
 				SetAttribute(0, 3, (void*)offsetof(ShadedVertex, Position));
 				SetAttribute(1, 3, (void*)offsetof(ShadedVertex, Normal));
 				SetAttribute(2, 2, (void*)offsetof(ShadedVertex, UVs));
+				SetAttribute(3, 3, (void*)offsetof(ShadedVertex, Tangent));
+				SetAttribute(4, 3, (void*)offsetof(ShadedVertex, Bitangent));
 			}
 			else if (TypeID<Vertex>() == TypeID<FlatVertex>()) 
 			{

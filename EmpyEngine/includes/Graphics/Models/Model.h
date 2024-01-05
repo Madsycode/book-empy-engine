@@ -66,16 +66,18 @@ namespace Empy
 			for (uint32_t i = 0; i < ai_mesh->mNumVertices; i++) 
             {
 				ShadedVertex vertex;
-
 				// positions
 				vertex.Position = AssimpToVec3(ai_mesh->mVertices[i]);
-
 				// normals
 				vertex.Normal = AssimpToVec3(ai_mesh->mNormals[i]);
 
 				// texcoords
 				vertex.UVs.x = ai_mesh->mTextureCoords[0][i].x;
 				vertex.UVs.y = ai_mesh->mTextureCoords[0][i].y;
+
+				// bi-tangent
+				vertex.Bitangent = AssimpToVec3(ai_mesh->mBitangents[i]); // <-- added
+				vertex.Tangent = AssimpToVec3(ai_mesh->mTangents[i]);     // <-- added
 
 				// push vertex
 				data.Vertices.push_back(vertex);

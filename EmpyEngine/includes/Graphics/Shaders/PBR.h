@@ -8,14 +8,19 @@ namespace Empy
     {        
         EMPY_INLINE PbrShader(const std::string& filename): Shader(filename) 
         {
-            u_NbrDirectLight = glGetUniformLocation(m_ShaderID, "u_nbrDirectLight");
-            u_NbrPointLight = glGetUniformLocation(m_ShaderID, "u_nbrPointLight");
-            u_NbrSpotLight = glGetUniformLocation(m_ShaderID, "u_nbrSpotLight");
+            u_UseRoughnessMap = glGetUniformLocation(m_ShaderID, "u_material.UseRoughnessMap");
+            u_UseMetallicMap = glGetUniformLocation(m_ShaderID, "u_material.UseMetallicMap");
+            u_UseAlbedoMap = glGetUniformLocation(m_ShaderID, "u_material.UseAlbedoMap");
+            u_UseNormalMap = glGetUniformLocation(m_ShaderID, "u_material.UseNormalMap");
 
             u_RoughnessMap = glGetUniformLocation(m_ShaderID, "u_material.RoughnessMap");
             u_MetallicMap = glGetUniformLocation(m_ShaderID, "u_material.MetallicMap");
             u_AlbedoMap = glGetUniformLocation(m_ShaderID, "u_material.AlbedoMap");
             u_NormalMap = glGetUniformLocation(m_ShaderID, "u_material.NormalMap");
+
+            u_NbrDirectLight = glGetUniformLocation(m_ShaderID, "u_nbrDirectLight");
+            u_NbrPointLight = glGetUniformLocation(m_ShaderID, "u_nbrPointLight");
+            u_NbrSpotLight = glGetUniformLocation(m_ShaderID, "u_nbrSpotLight");
 
             u_Roughness = glGetUniformLocation(m_ShaderID, "u_material.Roughness");
             u_Metallic = glGetUniformLocation(m_ShaderID, "u_material.Metallic");
@@ -85,17 +90,34 @@ namespace Empy
         EMPY_INLINE void Draw(Model3D& model, PbrMaterial& material, Transform3D& transform)
         {
             glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));   
-                     
+
             glUniform3fv(u_Albedo, 1, &material.Albedo.x);
             glUniform1f(u_Roughness, material.Roughness);
             glUniform1f(u_Metallic, material.Metallic);
 
-            // material maps
+            // texture unit
             int32_t unit = 0;
-            if(material.AlbedoMap) { material.AlbedoMap->Use(u_AlbedoMap, unit++); }
-            if(material.NormalMap) { material.AlbedoMap->Use(u_AlbedoMap, unit++); }
-            if(material.MetallicMap) { material.AlbedoMap->Use(u_MetallicMap, unit++); }
-            if(material.RoughnessMap) { material.AlbedoMap->Use(u_RoughnessMap, unit++); }
+            bool useMap = false;
+
+            // albedo map
+            useMap = material.AlbedoMap != nullptr;
+            glUniform1i(u_UseAlbedoMap, useMap);
+            if(useMap) { material.AlbedoMap->Use(u_AlbedoMap, unit++); }
+            
+            // normal map
+            useMap = material.NormalMap != nullptr;
+            glUniform1i(u_UseNormalMap, useMap);
+            if(useMap) { material.NormalMap->Use(u_NormalMap, unit++); }
+           
+            // mettalic map
+            useMap = material.MetallicMap != nullptr;
+            glUniform1i(u_UseMetallicMap, useMap);
+            if(useMap) { material.MetallicMap->Use(u_MetallicMap, unit++); }
+          
+            // roughness map
+            useMap = material.RoughnessMap != nullptr;
+            glUniform1i(u_UseRoughnessMap, useMap);
+            if(useMap) { material.RoughnessMap->Use(u_RoughnessMap, unit++); }
 
             // render model
             model->Draw(GL_TRIANGLES);        
@@ -128,6 +150,11 @@ namespace Empy
         uint32_t u_NbrPointLight = 0u;
         uint32_t u_NbrSpotLight = 0u;
         // --
+        uint32_t u_UseRoughnessMap = 0u;
+        uint32_t u_UseMetallicMap = 0u;
+        uint32_t u_UseAlbedoMap = 0u;
+        uint32_t u_UseNormalMap = 0u;
+
         uint32_t u_RoughnessMap = 0u;
         uint32_t u_MetallicMap = 0u;
         uint32_t u_AlbedoMap = 0u;
