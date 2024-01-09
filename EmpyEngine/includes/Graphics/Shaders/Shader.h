@@ -1,5 +1,6 @@
 #pragma once
-#include "Common/Core.h"
+#include "../Utilities/Data.h"
+#include "../Textures/Texture.h"
 
 namespace Empy
 {

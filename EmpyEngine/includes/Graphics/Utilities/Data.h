@@ -4,6 +4,17 @@
 
 namespace Empy
 {
+    // skybox data
+    struct Skybox
+    {
+        EMPY_INLINE Skybox(const Skybox&) = default;
+        EMPY_INLINE Skybox() = default; 
+        uint32_t PrefilMap = 0u;            
+        uint32_t IrradMap = 0u;        
+        uint32_t CubeMap = 0u;        
+        uint32_t BrdfMap = 0u;
+    };
+
     // pbr material
     struct PbrMaterial 
     {

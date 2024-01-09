@@ -6,18 +6,31 @@ namespace Empy
 {  
     struct Texture2D 
     {   
+        EMPY_INLINE Texture2D(const std::string& path, bool isHDR, bool flipY) 
+        { 
+            Load(path, isHDR, flipY); 
+        }
+
         EMPY_INLINE Texture2D(const std::string& path) { Load(path); }
         EMPY_INLINE ~Texture2D() { glDeleteTextures(1, &m_ID); }
         EMPY_INLINE Texture2D() = default;
 
-        EMPY_INLINE bool Load(const std::string& filename) 
+        EMPY_INLINE bool Load(const std::string& path, bool isHDR = false, bool flipY = true) 
         {
             // flip y axis (common)
-            stbi_set_flip_vertically_on_load(true);
+            stbi_set_flip_vertically_on_load(flipY);
+            void* pixels = nullptr;
 
             // load texture data
-            uint8_t* pixels = stbi_load(filename.c_str(), 
-            &m_Width, &m_Height, nullptr, 4);
+            if (isHDR) 
+            {
+                int32_t channels;
+				pixels = stbi_loadf(path.c_str(), &m_Width, &m_Height, &channels, 0);
+			}
+            else
+            {
+                pixels = stbi_load(path.c_str(), &m_Width, &m_Height, nullptr, 4);
+            }
 
             // check pixels
             if(pixels == nullptr) 
@@ -31,8 +44,15 @@ namespace Empy
             glBindTexture(GL_TEXTURE_2D, m_ID);            
 
             // load texture to gpu
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, 
-            m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);  
+            if (isHDR) 
+            {
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_Width, 
+                m_Height, 0, GL_RGB, GL_FLOAT, (float*)pixels);
+			}
+			else {
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 
+                0, GL_RGBA, GL_UNSIGNED_BYTE, (uint32_t*)pixels);
+			}
 
             // free allocated memory
             stbi_image_free(pixels);

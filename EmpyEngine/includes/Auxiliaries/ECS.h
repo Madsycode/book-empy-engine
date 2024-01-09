@@ -11,6 +11,14 @@ namespace Empy
 
     // ++
     
+    // skybox component
+    struct SkyboxComponent 
+    {
+        EMPY_INLINE SkyboxComponent(const SkyboxComponent&) = default;
+        EMPY_INLINE SkyboxComponent() = default; 
+        Skybox Sky;
+    };
+
     // direct light component
     struct DirectLightComponent 
     {

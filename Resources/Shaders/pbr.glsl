@@ -5,6 +5,10 @@ layout (location = 2) in vec2 a_uvs;
 layout (location = 3) in vec3 a_tangent;
 layout (location = 4) in vec3 a_bitangent;
 
+uniform mat4 u_model;
+uniform mat4 u_proj;
+uniform mat4 u_view;
+
 out Vertex
 {
   vec3 Position;
@@ -12,16 +16,12 @@ out Vertex
   mat3 TBN;
   vec2 UVs;
 } vertex;
-
-uniform mat4 u_model;
-uniform mat4 u_proj;
-uniform mat4 u_view;
  
 void main() 
 {       
   vertex.UVs = a_uvs;
-  vertex.Normal = mat3(u_model) * a_normal;
-  vertex.Position = vec3(u_model * vec4(a_position, 1.0));
+  vertex.Normal = (u_model * vec4(a_normal, 1.0)).xyz;
+  vertex.Position = (u_model * vec4(a_position, 1.0)).xyz;
   gl_Position = u_proj * u_view * u_model * vec4(a_position, 1.0);
   vertex.TBN = mat3(u_model) * mat3(a_tangent, a_bitangent, a_normal);
 }
@@ -103,21 +103,14 @@ uniform int u_nbrPointLight;
 uniform SpotLight u_spotLights[MAX_LIGHTS]; 
 uniform int u_nbrSpotLight; 
 
-//uniform sampler2D u_albedoMap;
+// auxiliary uniforms
 uniform Material u_material; 
 uniform vec3 u_viewPos;
 
-// computes surface normal
-vec3 ComputeSurfaceNormal()
-{
-  if(u_material.UseNormalMap) 
-  { 
-    // sample from map and convert from [0,1] range to [-1,1] range
-    vec3 normal = texture(u_material.NormalMap, vertex.UVs).rgb;
-    return normalize(vertex.TBN * normal * 2.0 - 1.0); 
-  }
-  return normalize(vertex.Normal);
-}
+// enviroment maps
+uniform samplerCube u_prefilMap; 
+uniform samplerCube u_irradMap; 
+uniform sampler2D u_brdfMap; 
 
 // computes fresnel reflectivity
 vec3 FresnelSchlick(float cosTheta, vec3 F0) 
@@ -154,6 +147,31 @@ float GeometrySmithGGX(float NdotV, float NdotL, float roughness)
   float ggx1 = GeometrySchlickGGX(NdotV, roughness);
   float ggx2 = GeometrySchlickGGX(NdotL, roughness);
   return ggx1 * ggx2;
+}
+
+// compute ambient lights
+vec3 ComputeAmbientLight(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, float metallic) 
+{
+ // angle between surface normal and light direction.
+	float cosTheta = max(0.0, dot(N, V));
+	
+	// get diffuse contribution factor 
+	vec3 F = FresnelSchlick(cosTheta, F0);
+	vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metallic);
+
+	// irradiance map contains exitant radiance 
+	vec3 diffuseIBL = kd * albedo * texture(u_irradMap, N).rgb;
+
+	// sample pre-filtered map at correct mipmap level.
+	int mipLevels = 5;
+	vec3 Lr = 2.0 * cosTheta * N - V;
+	vec3 Ks = textureLod(u_prefilMap, Lr, roughness * mipLevels).rgb;
+
+	// split-sum approx.factors for Cook-Torrance specular BRDF.
+	vec2 brdf = texture(u_brdfMap, vec2(cosTheta, roughness)).rg;
+	vec3 specularIBL = (F0 * brdf.x + brdf.y) * Ks;
+
+	return (diffuseIBL + specularIBL);
 }
 
 // compute direct lights
@@ -277,11 +295,17 @@ vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, fl
 // main function
 void main() 
 {
-  // get surface normal
-  vec3 N = ComputeSurfaceNormal();
-
   // camera view direction
   vec3 V = normalize(u_viewPos - vertex.Position);
+
+  // surface normal
+  vec3 N = normalize(vertex.Normal);
+  if(u_material.UseNormalMap) 
+  { 
+    // convert from [0,1] range to [-1, 1] range
+    N = 2.0 * texture(u_material.NormalMap, vertex.UVs).rgb - 1.0;
+    N = normalize(vertex.TBN * N); 
+  }
 
   // material roughness
   float roughness = u_material.Roughness;
@@ -308,7 +332,8 @@ void main()
   vec3 F0 = mix(vec3(0.04), albedo, metallic);  
 
   // lights contribution
-  vec3 result = ComputeDirectLights(N, V, F0, albedo, roughness, metallic);
+  vec3 result = ComputeAmbientLight(N, V, F0, albedo, roughness, metallic);
+  result += ComputeDirectLights(N, V, F0, albedo, roughness, metallic);
   result += ComputePointLights(N, V, F0, albedo, roughness, metallic);
   result += ComputeSpotLights(N, V, F0, albedo, roughness, metallic);
 

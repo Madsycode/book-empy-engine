@@ -68,6 +68,16 @@ namespace Empy
             return (float)m_Width/(float)m_Height; 
         }
 
+        EMPY_INLINE int32_t Width() 
+        { 
+            return m_Width; 
+        }
+
+        EMPY_INLINE int32_t Height() 
+        { 
+            return m_Height; 
+        }
+
         EMPY_INLINE void Begin() 
         {
             glBindFramebuffer(GL_FRAMEBUFFER, m_BufferID);   

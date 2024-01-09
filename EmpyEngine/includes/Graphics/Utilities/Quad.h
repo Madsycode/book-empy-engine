@@ -25,7 +25,7 @@ namespace Empy
             0, 2, 3
         };
 
-        return std::make_unique<Mesh<QuadVertex>>(std::move(data));
+        return std::make_unique<Mesh<QuadVertex>>(data);
     }
 
     // creates 3d quad mesh
@@ -67,6 +67,6 @@ namespace Empy
         data.Indices.push_back(2);
         data.Indices.push_back(3);
 
-        return std::make_unique<Mesh<ShadedVertex>>(std::move(data));
+        return std::make_unique<Mesh<ShadedVertex>>(data);
     }
 }

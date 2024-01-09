@@ -59,9 +59,13 @@ namespace Empy
 			{
 				SetAttribute(0, 4, (void*)offsetof(QuadVertex, Data));
 			}	
+			else if (TypeID<Vertex>() == TypeID<SkyboxVertex>()) 
+			{
+				SetAttribute(0, 3, (void*)offsetof(SkyboxVertex, Position));
+			}
 			else 
 			{
-				EMPY_ERROR(false && "invalid vertex type!");
+				EMPY_ERROR("invalid vertex type!");
 			}
 
 			// unbind vertext array

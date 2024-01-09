@@ -76,9 +76,9 @@ namespace Empy
 				vertex.UVs.y = ai_mesh->mTextureCoords[0][i].y;
 
 				// bi-tangent
-				vertex.Bitangent = AssimpToVec3(ai_mesh->mBitangents[i]); // <-- added
-				vertex.Tangent = AssimpToVec3(ai_mesh->mTangents[i]);     // <-- added
-
+				vertex.Bitangent = glm::normalize(AssimpToVec3(ai_mesh->mBitangents[i])); 
+				vertex.Tangent = glm::normalize(AssimpToVec3(ai_mesh->mTangents[i])); 
+				
 				// push vertex
 				data.Vertices.push_back(vertex);
 			}

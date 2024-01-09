@@ -1,6 +1,5 @@
 #pragma once
 #include "Shader.h"
-#include "../Utilities/Data.h"
 
 namespace Empy
 {
@@ -17,6 +16,10 @@ namespace Empy
             u_MetallicMap = glGetUniformLocation(m_ShaderID, "u_material.MetallicMap");
             u_AlbedoMap = glGetUniformLocation(m_ShaderID, "u_material.AlbedoMap");
             u_NormalMap = glGetUniformLocation(m_ShaderID, "u_material.NormalMap");
+
+            u_PrefilMap = glGetUniformLocation(m_ShaderID, "u_prefilMap");            
+            u_IrradMap = glGetUniformLocation(m_ShaderID, "u_irradMap");
+            u_BrdfMap = glGetUniformLocation(m_ShaderID, "u_brdfMap");
 
             u_NbrDirectLight = glGetUniformLocation(m_ShaderID, "u_nbrDirectLight");
             u_NbrPointLight = glGetUniformLocation(m_ShaderID, "u_nbrPointLight");
@@ -95,11 +98,11 @@ namespace Empy
             glUniform1f(u_Roughness, material.Roughness);
             glUniform1f(u_Metallic, material.Metallic);
 
-            // texture unit
-            int32_t unit = 0;
+            int32_t unit = 3; // <-- start by unit 3
             bool useMap = false;
 
             // albedo map
+
             useMap = material.AlbedoMap != nullptr;
             glUniform1i(u_UseAlbedoMap, useMap);
             if(useMap) { material.AlbedoMap->Use(u_AlbedoMap, unit++); }
@@ -144,21 +147,45 @@ namespace Empy
         {
             glUniform1i(u_NbrSpotLight, count);
         }
+
+        EMPY_INLINE void SetEnvMaps(uint32_t irrad, uint32_t prefil, uint32_t brdf)
+        {
+            glUseProgram(m_ShaderID);
+
+            // irradiance map
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, irrad);
+            glUniform1i(u_IrradMap, 0);
+
+            // prefiltered map
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, prefil);
+            glUniform1i(u_PrefilMap, 1);
+
+            // BRDF Map
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, brdf);
+            glUniform1i(brdf, 2);
+        }
                 
     private:     
         uint32_t u_NbrDirectLight = 0u;
         uint32_t u_NbrPointLight = 0u;
-        uint32_t u_NbrSpotLight = 0u;
+        uint32_t u_NbrSpotLight = 0u;        
         // --
         uint32_t u_UseRoughnessMap = 0u;
         uint32_t u_UseMetallicMap = 0u;
         uint32_t u_UseAlbedoMap = 0u;
         uint32_t u_UseNormalMap = 0u;
-
+        // --
         uint32_t u_RoughnessMap = 0u;
         uint32_t u_MetallicMap = 0u;
         uint32_t u_AlbedoMap = 0u;
         uint32_t u_NormalMap = 0u;
+
+        uint32_t u_PrefilMap = 0u;
+        uint32_t u_IrradMap = 0u;
+        uint32_t u_BrdfMap = 0u;
         // --
         uint32_t u_Roughness = 0u;
         uint32_t u_Metallic = 0u;
