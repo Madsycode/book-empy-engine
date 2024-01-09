@@ -157,10 +157,10 @@ vec3 ComputeAmbientLight(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, 
 	
 	// get diffuse contribution factor 
 	vec3 F = FresnelSchlick(cosTheta, F0);
-	vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metallic);
+	vec3 Kd = mix(vec3(1.0) - F, vec3(0.0), metallic);
 
 	// irradiance map contains exitant radiance 
-	vec3 diffuseIBL = kd * albedo * texture(u_irradMap, N).rgb;
+	vec3 diffuseIBL = Kd * albedo * texture(u_irradMap, N).rgb;
 
 	// sample pre-filtered map at correct mipmap level.
 	int mipLevels = 5;
@@ -171,7 +171,7 @@ vec3 ComputeAmbientLight(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, 
 	vec2 brdf = texture(u_brdfMap, vec2(cosTheta, roughness)).rg;
 	vec3 specularIBL = (F0 * brdf.x + brdf.y) * Ks;
 
-	return (diffuseIBL + specularIBL);
+	return (diffuseIBL + specularIBL);	
 }
 
 // compute direct lights

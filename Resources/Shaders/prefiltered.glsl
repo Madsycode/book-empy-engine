@@ -15,7 +15,7 @@ void main()
 ++VERTEX++
 
 #version 330 core
-out vec4 fragcolor; 
+out vec4 out_fragment; 
 in vec3 world_position;
 
 const float PI = 3.14159265358979323846;
@@ -86,7 +86,7 @@ void main()
     }
 
     result = result / totalWeight;
-    fragcolor = vec4(result, 1.0);
+    out_fragment = vec4(result, 1.0);
 }
 
 ++FRAGMENT++

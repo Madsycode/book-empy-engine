@@ -98,7 +98,7 @@ namespace Empy
             glUniform1f(u_Roughness, material.Roughness);
             glUniform1f(u_Metallic, material.Metallic);
 
-            int32_t unit = 3; // <-- start by unit 3
+            int32_t unit = 3; // <-- starts at unit 3
             bool useMap = false;
 
             // albedo map
@@ -182,7 +182,7 @@ namespace Empy
         uint32_t u_MetallicMap = 0u;
         uint32_t u_AlbedoMap = 0u;
         uint32_t u_NormalMap = 0u;
-
+        //--
         uint32_t u_PrefilMap = 0u;
         uint32_t u_IrradMap = 0u;
         uint32_t u_BrdfMap = 0u;
