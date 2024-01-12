@@ -21,6 +21,9 @@ namespace Empy
             u_IrradMap = glGetUniformLocation(m_ShaderID, "u_irradMap");
             u_BrdfMap = glGetUniformLocation(m_ShaderID, "u_brdfMap");
 
+            u_LightSpace = glGetUniformLocation(m_ShaderID, "u_lightSpace");
+            u_DepthMap = glGetUniformLocation(m_ShaderID, "u_depthMap");
+
             u_NbrDirectLight = glGetUniformLocation(m_ShaderID, "u_nbrDirectLight");
             u_NbrPointLight = glGetUniformLocation(m_ShaderID, "u_nbrPointLight");
             u_NbrSpotLight = glGetUniformLocation(m_ShaderID, "u_nbrSpotLight");
@@ -48,6 +51,12 @@ namespace Empy
             glUniform3fv(u_direction, 1, &transform.Rotation.x);
             glUniform3fv(u_radiance, 1, &light.Radiance.x);
             glUniform1f(u_intensity, light.Intensity);
+        }
+
+        EMPY_INLINE void SetLightSpaceMatrix(const glm::mat4& lightSpaceMtx)
+        {
+            // set view projection matrix
+            glUniformMatrix4fv(u_LightSpace, 1, GL_FALSE, glm::value_ptr(lightSpaceMtx));  
         }
 
         EMPY_INLINE void SetPointLight(PointLight& light, Transform3D& transform, int32_t index) 
@@ -98,11 +107,10 @@ namespace Empy
             glUniform1f(u_Roughness, material.Roughness);
             glUniform1f(u_Metallic, material.Metallic);
 
-            int32_t unit = 3; // <-- starts at unit 3
+            int32_t unit = 4; // <-- starts at unit 4
             bool useMap = false;
 
             // albedo map
-
             useMap = material.AlbedoMap != nullptr;
             glUniform1i(u_UseAlbedoMap, useMap);
             if(useMap) { material.AlbedoMap->Use(u_AlbedoMap, unit++); }
@@ -132,23 +140,8 @@ namespace Empy
             glUniformMatrix4fv(u_View, 1, GL_FALSE, glm::value_ptr(camera.View(transform)));
             glUniform3fv(u_ViewPos, 1, &transform.Translate.x);
         } 
-        
-        EMPY_INLINE void SetDirectLightCount(int32_t count)
-        {
-            glUniform1i(u_NbrDirectLight, count);
-        }
 
-        EMPY_INLINE void SetPointLightCount(int32_t count)
-        {
-            glUniform1i(u_NbrPointLight, count);
-        }
-
-        EMPY_INLINE void SetSpotLightCount(int32_t count)
-        {
-            glUniform1i(u_NbrSpotLight, count);
-        }
-
-        EMPY_INLINE void SetEnvMaps(uint32_t irrad, uint32_t prefil, uint32_t brdf)
+        EMPY_INLINE void SetEnvMaps(uint32_t irrad, uint32_t prefil, uint32_t brdf, uint32_t depthMap)
         {
             glUseProgram(m_ShaderID);
 
@@ -165,9 +158,29 @@ namespace Empy
             // BRDF Map
             glActiveTexture(GL_TEXTURE2);
             glBindTexture(GL_TEXTURE_2D, brdf);
-            glUniform1i(brdf, 2);
+            glUniform1i(u_BrdfMap, 2);
+
+            // Depth Map
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, depthMap);
+            glUniform1i(u_DepthMap, 3);
         }
-                
+
+        EMPY_INLINE void SetDirectLightCount(int32_t count)
+        {
+            glUniform1i(u_NbrDirectLight, count);
+        }
+
+        EMPY_INLINE void SetPointLightCount(int32_t count)
+        {
+            glUniform1i(u_NbrPointLight, count);
+        }
+
+        EMPY_INLINE void SetSpotLightCount(int32_t count)
+        {
+            glUniform1i(u_NbrSpotLight, count);
+        }
+
     private:     
         uint32_t u_NbrDirectLight = 0u;
         uint32_t u_NbrPointLight = 0u;
@@ -186,6 +199,9 @@ namespace Empy
         uint32_t u_PrefilMap = 0u;
         uint32_t u_IrradMap = 0u;
         uint32_t u_BrdfMap = 0u;
+        //--
+        uint32_t u_LightSpace = 0u;
+        uint32_t u_DepthMap = 0u;
         // --
         uint32_t u_Roughness = 0u;
         uint32_t u_Metallic = 0u;

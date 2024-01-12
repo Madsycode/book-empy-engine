@@ -107,6 +107,10 @@ uniform int u_nbrSpotLight;
 uniform Material u_material; 
 uniform vec3 u_viewPos;
 
+// shadow mapping
+uniform sampler2D u_depthMap; 
+uniform mat4 u_lightSpace;
+
 // enviroment maps
 uniform samplerCube u_prefilMap; 
 uniform samplerCube u_irradMap; 
@@ -292,6 +296,18 @@ vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, fl
   return result;
 }
 
+float ComputeShadow(vec3 N, vec3 L)
+{
+  vec4 position = u_lightSpace * vec4(vertex.Position, 1.0); 
+  vec3 uvs = (position.xyz / position.w) * 0.5 + 0.5;
+  float depth = texture(u_depthMap, uvs.xy).r;
+
+  //float bias = max(0.05 * (1.0 - dot(N, L)), 0.005);
+  //vec2 size = 1.0 / textureSize(u_depthMap, 0);
+
+  return position.z > depth ? 1.0 : 0.0;
+}
+
 // main function
 void main() 
 {
@@ -336,6 +352,8 @@ void main()
   result += ComputeDirectLights(N, V, F0, albedo, roughness, metallic);
   result += ComputePointLights(N, V, F0, albedo, roughness, metallic);
   result += ComputeSpotLights(N, V, F0, albedo, roughness, metallic);
+
+  result *= (1.0 - ComputeShadow(N, vec3(0.0)));
 
   // final color calculation
   out_fragment = vec4(result, 1.0);

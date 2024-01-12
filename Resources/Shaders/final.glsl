@@ -33,6 +33,9 @@ void main()
   // gamma correction
   result = pow(result, vec3(1.0 / max(GAMMA, MIN_GAMMA)));
 
+  //float depth = texture(u_map, uvs).r;
+  //out_fragment = vec4(depth, depth, depth, 1.0);//vec4(result, 1.0); 
+  
   // fragment color
   out_fragment = vec4(result, 1.0); 
 }

@@ -3,6 +3,7 @@
 #include "Shaders/Irradiance.h"
 #include "Shaders/Skybox.h"
 #include "Shaders/SkyMap.h"
+#include "Shaders/Shadow.h"
 #include "Buffers/Frame.h"
 #include "Shaders/Final.h"
 #include "Shaders/BRDF.h"
@@ -32,6 +33,7 @@ namespace Empy
             m_SkyMap = std::make_unique<SkyMapShader>("Resources/Shaders/skymap.glsl");            
             m_Brdf = std::make_unique<BrdfShader>("Resources/Shaders/brdf.glsl");
 
+            m_Shadow = std::make_unique<ShadowShader>("Resources/Shaders/shadow.glsl");
             m_Final = std::make_unique<FinalShader>("Resources/Shaders/final.glsl");
             m_Pbr = std::make_unique<PbrShader>("Resources/Shaders/pbr.glsl");
 
@@ -76,6 +78,11 @@ namespace Empy
             m_Pbr->Draw(model, material, transform);
         }
 
+        EMPY_INLINE void DrawDepth(Model3D& model, Transform3D& transform)
+        {
+            m_Shadow->Draw(model, transform);
+        }
+
         EMPY_INLINE void InitSkybox(Skybox& sky, Texture& texture, int32_t size)
         {
             sky.BrdfMap = m_Brdf->Generate(512);
@@ -87,25 +94,52 @@ namespace Empy
         EMPY_INLINE void DrawSkybox(Skybox& sky, Transform3D& transform)
         {
             m_Skybox->Draw(m_SkyboxMesh, sky.CubeMap, transform);
-            m_Pbr->SetEnvMaps(sky.IrradMap, sky.PrefilMap, sky.BrdfMap);            
+            m_Pbr->SetEnvMaps(sky.IrradMap, sky.PrefilMap, 
+            sky.BrdfMap, m_Shadow->GetDepthMap());   
         }
 
         EMPY_INLINE void SetCamera(Camera3D& camera, Transform3D& transform)
         {
+            // frame aspect ratio
             float aspect = m_Frame->Ratio();
-            m_Pbr->SetCamera(camera, transform, aspect);
 
             // binds skybox shader ad set mvp
             m_Skybox->SetCamera(camera, transform, aspect);
 
             // rebind pbr shader again
             m_Pbr->Bind();      
+            m_Pbr->SetCamera(camera, transform, aspect);
         }
                
         EMPY_INLINE void Resize(int32_t width, int32_t height) 
         {
             m_Frame->Resize(width, height);            
         }
+
+        // --
+
+        EMPY_INLINE void BeginShadowPass(const glm::vec3& LightDir)
+        {            
+            // prepare projection and view mtx
+            static auto proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 10.0f);
+            auto view = glm::lookAt(LightDir, glm::vec3(0.0f, 0.0f,  0.0f), 
+            glm::vec3(0.0f, 1.0f,  0.0f));  
+
+            // compute light space
+            auto lightSpaceMtx = (proj * view);
+
+            // set pbr shader light space mtx and depth map
+            m_Pbr->Bind();
+            m_Pbr->SetLightSpaceMatrix(lightSpaceMtx);
+
+            // begin depth rendering
+            m_Shadow->BeginFrame(lightSpaceMtx);   
+        } 
+
+        EMPY_INLINE void EndShadowPass()
+        {
+            m_Shadow->EndFrame();
+        } 
 
         // --
 
@@ -117,10 +151,11 @@ namespace Empy
         EMPY_INLINE void ShowFrame()
         {
             m_Final->Show(m_Frame->GetTexture());
-        }  
+            //m_Final->Show(m_Shadow->GetDepthMap());
+        }          
 
         EMPY_INLINE void NewFrame()
-        {
+        {            
             m_Frame->Begin();   
             m_Pbr->Bind();      
         }     
@@ -135,11 +170,13 @@ namespace Empy
         std::unique_ptr<PrefilteredShader> m_Prefil;        
         std::unique_ptr<IrradianceShader> m_Irrad;
         std::unique_ptr<SkyboxShader> m_Skybox;        
+        std::unique_ptr<ShadowShader> m_Shadow;
         std::unique_ptr<SkyMapShader> m_SkyMap;
-        std::unique_ptr<FrameBuffer> m_Frame;
         std::unique_ptr<FinalShader> m_Final;
         std::unique_ptr<BrdfShader> m_Brdf;
-        std::unique_ptr<PbrShader> m_Pbr;        
+        std::unique_ptr<PbrShader> m_Pbr;    
+
+        std::unique_ptr<FrameBuffer> m_Frame;
         SkyboxMesh m_SkyboxMesh;
     };
 }

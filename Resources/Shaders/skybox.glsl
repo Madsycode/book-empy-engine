@@ -8,7 +8,6 @@ uniform mat4 u_proj;
 
 void main() 
 {
-  //mat4(mat3(u_view)) 
   vec4 position = u_proj * mat4(mat3(u_view))  * 
   u_model * vec4(a_position, 1.0f);
 

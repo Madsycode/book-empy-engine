@@ -38,12 +38,12 @@ namespace Empy
             m_Width = width;       
             m_Height = height;
 
-            // Resize Color Attachment
+            // Resize Color Buffer
             glBindTexture(GL_TEXTURE_2D, m_Color);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 
             m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, NULL);
 
-            // Resize Depth Attachment
+            // Resize Render Buffer
             glBindRenderbuffer(GL_RENDERBUFFER, m_Render);
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, m_Width, m_Height);
 
@@ -66,16 +66,6 @@ namespace Empy
         EMPY_INLINE float Ratio() 
         { 
             return (float)m_Width/(float)m_Height; 
-        }
-
-        EMPY_INLINE int32_t Width() 
-        { 
-            return m_Width; 
-        }
-
-        EMPY_INLINE int32_t Height() 
-        { 
-            return m_Height; 
         }
 
         EMPY_INLINE void Begin() 
@@ -116,7 +106,7 @@ namespace Empy
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, m_Width, m_Height);
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_Render);
         }
-
+        
     private:
         uint32_t m_BufferID = 0u;
         uint32_t m_Render = 0u;

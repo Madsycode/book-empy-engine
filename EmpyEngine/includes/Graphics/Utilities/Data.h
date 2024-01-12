@@ -22,7 +22,7 @@ namespace Empy
         EMPY_INLINE PbrMaterial() = default;
 
         glm::vec3 Albedo = glm::vec3(1.0f);
-        float Roughness = 0.4f;
+        float Roughness = 0.3f;
         float Metallic = 0.5f;
 
         Texture RoughnessMap;
@@ -60,6 +60,7 @@ namespace Empy
         EMPY_INLINE DirectLight() = default; 
         
         glm::vec3 Radiance = glm::vec3(1.0f);
+        float ShadowBias = 0.05f;
         float Intensity = 10.0f;
     };
 

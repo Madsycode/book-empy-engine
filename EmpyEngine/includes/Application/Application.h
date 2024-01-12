@@ -28,18 +28,20 @@ namespace Empy
             // load environment map
             auto skymap = std::make_shared<Texture2D>("Resources/Textures/HDRs/Sky.hdr", true, true);
 
-            // load textures
-            auto roughness = std::make_shared<Texture2D>("Resources/Textures/Marble/Roughness.png");
-            auto albedo = std::make_shared<Texture2D>("Resources/Textures/Marble/Albedo.png");
-            auto normal = std::make_shared<Texture2D>("Resources/Textures/Marble/Normal.png");
-
+            // // load textures
+            // auto roughness = std::make_shared<Texture2D>("Resources/Textures/Marble/Roughness.png");
+            // auto albedo = std::make_shared<Texture2D>("Resources/Textures/Marble/Albedo.png");
+            // auto normal = std::make_shared<Texture2D>("Resources/Textures/Marble/Normal.png");
+            
             // load models
             auto sphereModel = std::make_shared<Model>("Resources/Models/sphere.fbx");
             auto cubeModel = std::make_shared<Model>("Resources/Models/cube.fbx");
 
             // create scene camera
             auto camera = CreateEntt<Entity>();                    
-            camera.Attach<TransformComponent>().Transform.Translate.z = 3.0f;
+            auto& tf = camera.Attach<TransformComponent>().Transform;
+            tf.Translate.y = 4.5f;
+            tf.Translate.z = 20.0f;
             camera.Attach<CameraComponent>();
 
             // create environment entity
@@ -51,22 +53,24 @@ namespace Empy
             auto slight = CreateEntt<Entity>();                    
             slight.Attach<DirectLightComponent>().Light.Intensity = 0.0f;
             auto& stp = slight.Attach<TransformComponent>().Transform;
-            stp.Rotation = glm::vec3(0.0f, 0.0f, -1.0f);
-            stp.Translate.z = 1.0f;
+            //stp.Rotation = glm::vec3(0.0f, 0.5f, -1.0f); 
+            stp.Rotation = glm::vec3(0.0f, 1.5f, -2.0f); 
 
-            // create cube entity
+            // create sphere entity
+            auto sphere = CreateEntt<Entity>();
+            sphere.Attach<ModelComponent>().Model = sphereModel;
+            auto& ts = sphere.Attach<TransformComponent>().Transform;
+            ts.Translate.y = 6.0f;
+            ts.Translate.z = -0.65f;
+            ts.Scale *= 6.0f;
+
+            // create plane entity
             auto cube = CreateEntt<Entity>();
-            cube.Attach<TransformComponent>().Transform.Scale *= 2.0f;
-            auto& mod = cube.Attach<ModelComponent>();
-            mod.Model = sphereModel;
-
-            mod.Material.Albedo = glm::vec3(0.0f); 
-            mod.Material.Roughness = 0.1f;      
-            mod.Material.Metallic = 0.1f;         
-
-            mod.Material.RoughnessMap = roughness; 
-            mod.Material.AlbedoMap = albedo;      
-            mod.Material.NormalMap = normal;       
+            cube.Attach<ModelComponent>().Model = cubeModel;
+            auto& tc = cube.Attach<TransformComponent>().Transform; 
+            tc.Scale.x = 20.0f;
+            tc.Scale.z = 20.0f;
+            tc.Scale.y = 0.5f;
 
             // generate enviroment maps
             EnttView<Entity, SkyboxComponent>([this, &skymap] (auto entity, auto& comp) 
@@ -77,6 +81,9 @@ namespace Empy
             // application main loop
             while(m_Context->Window->PollEvents())
             {
+                // render scene depth
+                RenderSceneDepth();
+
                 // start new frame
                 m_Context->Renderer->NewFrame(); 
                                  
@@ -104,7 +111,7 @@ namespace Empy
                 {      
                     auto& transform = entity.template Get<TransformComponent>().Transform;
                     m_Context->Renderer->SetDirectLight(comp.Light, transform, lightCounter);
-                    lightCounter++;
+                    lightCounter++;            
                 }); 
                 // set number of direct lights
                 m_Context->Renderer->SetDirectLightCount(lightCounter);
@@ -132,7 +139,6 @@ namespace Empy
                 {      
                     auto& transform = entity.template Get<TransformComponent>().Transform;
                     m_Context->Renderer->Draw(comp.Model, comp.Material, transform);    
-                    transform.Rotation.y += 0.16666f;                                                 
                 });  
 
                 // end frame                
@@ -147,6 +153,61 @@ namespace Empy
                 // show frame to screen
                 m_Context->Renderer->ShowFrame();
             }
+        }
+
+    private:
+        EMPY_INLINE void RenderSceneDepth()
+        {        
+            EnttView<Entity, DirectLightComponent>([this] (auto light, auto&) 
+            {
+                // light direction
+                auto& lightDir = light.template Get<TransformComponent>().Transform.Rotation;
+                float delta = 0.0166666f;
+
+                if(m_Context->Window->IsKey(GLFW_KEY_A))
+                    lightDir.x -= delta;
+                if(m_Context->Window->IsKey(GLFW_KEY_D))
+                    lightDir.x += delta;
+                if(m_Context->Window->IsKey(GLFW_KEY_W))
+                    lightDir.y -= delta;
+                if(m_Context->Window->IsKey(GLFW_KEY_S))
+                    lightDir.y += delta;
+                if(m_Context->Window->IsKey(GLFW_KEY_E))
+                    lightDir.z -= delta;
+                if(m_Context->Window->IsKey(GLFW_KEY_R))
+                    lightDir.z += delta;
+
+                // begin rendering
+                m_Context->Renderer->BeginShadowPass(lightDir);
+
+                // render depth 
+                EnttView<Entity, ModelComponent>([this, &lightDir] (auto entity, auto& comp) 
+                {      
+                    auto& transform = entity.template Get<TransformComponent>().Transform;
+                    m_Context->Renderer->DrawDepth(comp.Model, transform);  
+
+                    float delta = 0.0166666f;
+                    if(3 == (uint32_t)entity.ID())
+                    {
+                        if(m_Context->Window->IsKey(GLFW_KEY_LEFT))
+                            transform.Translate.x -= delta;
+                        if(m_Context->Window->IsKey(GLFW_KEY_RIGHT))
+                            transform.Translate.x += delta;
+                        if(m_Context->Window->IsKey(GLFW_KEY_UP))
+                            transform.Translate.y += delta;
+                        if(m_Context->Window->IsKey(GLFW_KEY_DOWN))
+                            transform.Translate.y -= delta;
+                        if(m_Context->Window->IsKey(GLFW_KEY_KP_0))
+                            transform.Translate.z -= delta;
+                        if(m_Context->Window->IsKey(GLFW_KEY_KP_1))
+                            transform.Translate.z += delta;                                                 
+                    }
+                }); 
+
+                // ffinalize frame
+                m_Context->Renderer->EndShadowPass();
+            });
+
         }
     };
 }

@@ -54,8 +54,8 @@ namespace Empy
 
             // buffer swap interval
             glfwSwapInterval(1);             
-        }
-      
+        }       
+
         EMPY_INLINE bool IsMouse(int32_t button)
         {
             if(button >= 0 && button <= GLFW_MOUSE_BUTTON_LAST)
