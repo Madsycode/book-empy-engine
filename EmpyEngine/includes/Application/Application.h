@@ -119,9 +119,9 @@ namespace Empy
                 EnttView<Entity, ModelComponent>([this] (auto entity, auto& comp) 
                 {      
                     // compute key frames
-                    if(entity.Has<AnimatorComponent>())
+                    if(entity.template Has<AnimatorComponent>())
                     {
-                        auto& animator = entity.Get<AnimatorComponent>().Animator;
+                        auto& animator = entity.template Get<AnimatorComponent>().Animator;
                         auto& transforms = animator->Animate(0.016666f);
                         m_Context->Renderer->SetJoints(transforms);
                     }
