@@ -5,6 +5,7 @@
 #include "Shaders/SkyMap.h"
 #include "Shaders/Shadow.h"
 #include "Buffers/Frame.h"
+#include "Shaders/Bloom.h"
 #include "Shaders/Final.h"
 #include "Shaders/BRDF.h"
 #include "Shaders/PBR.h"
@@ -26,6 +27,8 @@ namespace Empy
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glEnable(GL_BLEND);
             glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+            m_Bloom = std::make_unique<BloomShader>("Resources/Shaders/bloom.glsl", width, height);
 
             m_Prefil = std::make_unique<PrefilteredShader>("Resources/Shaders/prefiltered.glsl");
             m_Irrad = std::make_unique<IrradianceShader>("Resources/Shaders/irradiance.glsl");
@@ -113,7 +116,8 @@ namespace Empy
                
         EMPY_INLINE void Resize(int32_t width, int32_t height) 
         {
-            m_Frame->Resize(width, height);            
+            m_Frame->Resize(width, height);      
+            m_Bloom->Resize(width, height);      
         }
 
         // --
@@ -150,8 +154,8 @@ namespace Empy
         
         EMPY_INLINE void ShowFrame()
         {
-            m_Final->Show(m_Frame->GetTexture());
-            //m_Final->Show(m_Shadow->GetDepthMap());
+            glViewport(0, 0, m_Frame->Width(), m_Frame->Height());         
+            m_Final->Show(m_Frame->GetTexture(), m_Bloom->GetMap());
         }          
 
         EMPY_INLINE void NewFrame()
@@ -164,6 +168,9 @@ namespace Empy
         {
             m_Pbr->Unbind();      
             m_Frame->End();
+
+            // post-processing
+            m_Bloom->Compute(m_Frame->GetBrightnessMap(), 10);
         }   
 
     private:
@@ -172,6 +179,7 @@ namespace Empy
         std::unique_ptr<SkyboxShader> m_Skybox;        
         std::unique_ptr<ShadowShader> m_Shadow;
         std::unique_ptr<SkyMapShader> m_SkyMap;
+        std::unique_ptr<BloomShader> m_Bloom;
         std::unique_ptr<FinalShader> m_Final;
         std::unique_ptr<BrdfShader> m_Brdf;
         std::unique_ptr<PbrShader> m_Pbr;    

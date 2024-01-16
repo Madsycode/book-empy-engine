@@ -12,15 +12,17 @@ namespace Empy
             glBindFramebuffer(GL_FRAMEBUFFER, m_BufferID);
 
             CreateColorAttachment();
+            CreateBrightnessAttachment();
             CreateRenderBuffer();
 
             // Attachment Tagets
-            uint32_t attachments[1] = 
+            uint32_t attachments[2] = 
             { 
-                GL_COLOR_ATTACHMENT0 
+                GL_COLOR_ATTACHMENT0,
+                GL_COLOR_ATTACHMENT1,
             };
 
-            glDrawBuffers(1, attachments);
+            glDrawBuffers(2, attachments);
 
             // check frame buffer
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) 
@@ -43,6 +45,11 @@ namespace Empy
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 
             m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, NULL);
 
+            // Resize Brightness Buffer
+            glBindTexture(GL_TEXTURE_2D, m_Brightness);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 
+            m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, NULL);
+
             // Resize Render Buffer
             glBindRenderbuffer(GL_RENDERBUFFER, m_Render);
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, m_Width, m_Height);
@@ -51,14 +58,24 @@ namespace Empy
             glBindTexture(GL_TEXTURE_2D, 0);
         }       
 
+        EMPY_INLINE uint32_t GetBrightnessMap() 
+        { 
+            return m_Brightness; 
+        } 
+
         EMPY_INLINE uint32_t GetTexture() 
         { 
             return m_Color; 
         } 
 
+        EMPY_INLINE int32_t Height() { return m_Height; }
+
+        EMPY_INLINE int32_t Width() { return m_Width; }
+
         EMPY_INLINE ~FrameBuffer() 
         {
             glDeleteTextures(1, &m_Color); 
+            glDeleteTextures(1, &m_Brightness); 
             glDeleteRenderbuffers(1, &m_Render); 
             glDeleteFramebuffers(1, &m_BufferID); 
         }
@@ -77,13 +94,14 @@ namespace Empy
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glEnable(GL_DEPTH_TEST); 
             glEnable(GL_SAMPLES);  	
+            glCullFace(GL_BACK);
         }
 
         EMPY_INLINE void End() 
         {
             glDisable(GL_SAMPLES);  	
             glDisable(GL_DEPTH_TEST); 
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);             
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);    
         }
     
     private:
@@ -99,6 +117,18 @@ namespace Empy
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Color, 0);
         }
 
+        EMPY_INLINE void CreateBrightnessAttachment() 
+        {
+            glGenTextures(1, &m_Brightness);
+            glBindTexture(GL_TEXTURE_2D, m_Brightness);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, m_Width, m_Height, 0, GL_RGBA, GL_FLOAT, NULL);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, m_Brightness, 0);
+        }
+
         EMPY_INLINE void CreateRenderBuffer() 
         {
             glGenRenderbuffers(1, &m_Render);
@@ -108,6 +138,7 @@ namespace Empy
         }
         
     private:
+        uint32_t m_Brightness = 0u;
         uint32_t m_BufferID = 0u;
         uint32_t m_Render = 0u;
         uint32_t m_Color = 0u;

@@ -21,11 +21,14 @@ const float EXPOSURE = 10.0;
 const float MIN_GAMMA = 0.000001;
 
 uniform sampler2D u_map;
+uniform sampler2D u_bloom;
 
 void main() 
 { 
+  vec3 result = texture(u_map, uvs).rgb + texture(u_bloom, uvs).rgb;
+
   // sample color from map
-  vec3 result = pow(texture(u_map, uvs).rgb, vec3(GAMMA));
+  result = pow(result, vec3(GAMMA));
 
   // process exposure
   result = vec3(1.0) - exp(-result * EXPOSURE); 
@@ -33,9 +36,6 @@ void main()
   // gamma correction
   result = pow(result, vec3(1.0 / max(GAMMA, MIN_GAMMA)));
 
-  //float depth = texture(u_map, uvs).r;
-  //out_fragment = vec4(depth, depth, depth, 1.0);//vec4(result, 1.0); 
-  
   // fragment color
   out_fragment = vec4(result, 1.0); 
 }

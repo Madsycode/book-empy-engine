@@ -30,8 +30,10 @@ void main()
 
 #version 330 core
 layout (location = 0) out vec4 out_fragment;
+layout (location = 1) out vec4 out_brightness;
 
 // constants
+const vec3 BLOOM_THRESHOD = vec3(0.2126, 0.7152, 0.0722);
 #define PI 3.14159265358979323846
 #define MAX_LIGHTS 10
 
@@ -68,6 +70,12 @@ struct Material
   sampler2D RoughnessMap;
   bool UseRoughnessMap;
 
+  sampler2D OcclusionMap;
+  bool UseOcclusionMap;
+
+  sampler2D EmissiveMap;
+  bool UseEmissiveMap;
+
   sampler2D MetallicMap;
   bool UseMetallicMap;
 
@@ -77,8 +85,11 @@ struct Material
   sampler2D AlbedoMap;
   bool UseAlbedoMap;
 
+  float Occlusion;
   float Roughness;
   float Metallic;
+
+  vec3 Emissive;
   vec3 Albedo;
 };
 
@@ -296,16 +307,31 @@ vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, fl
   return result;
 }
 
-float ComputeShadow(vec3 N, vec3 L)
+float ComputeShadow()
 {
   vec4 position = u_lightSpace * vec4(vertex.Position, 1.0); 
-  vec3 uvs = (position.xyz / position.w) * 0.5 + 0.5;
-  float depth = texture(u_depthMap, uvs.xy).r;
+  vec3 coords = (position.xyz / position.w) * 0.5 + 0.5;
 
-  //float bias = max(0.05 * (1.0 - dot(N, L)), 0.005);
-  //vec2 size = 1.0 / textureSize(u_depthMap, 0);
+  // pixel size (1024 -> map size)
+  float pixelSize = 1.0/1024;
+  float shadow = 0.0;
+  float bias = 0.005;
 
-  return position.z > depth ? 1.0 : 0.0;
+  // compute average pcf
+  for(int x = -1; x <= 1; ++x)
+  {
+    for(int y = -1; y <= 1; ++y)
+    {
+      float depth = texture(u_depthMap, coords.xy + vec2(x, y) * pixelSize).r; 
+      shadow += (position.z - bias) > depth ? 0.7 : 0.0;        
+    }    
+  }
+  shadow /= 9.0;
+
+  if(coords.z > 1.0)
+    shadow = 0.0;
+
+  return shadow;
 }
 
 // main function
@@ -330,11 +356,25 @@ void main()
     roughness = texture(u_material.RoughnessMap, vertex.UVs).r;
   }
 
+  // material occlusion
+  float occlusion = u_material.Occlusion;
+  if(u_material.UseOcclusionMap)
+  {
+    occlusion = texture(u_material.OcclusionMap, vertex.UVs).r;
+  }
+
   // material metallic
   float metallic = u_material.Metallic;
   if(u_material.UseMetallicMap)
   {
     metallic = texture(u_material.MetallicMap, vertex.UVs).r;
+  }
+
+  // material emissivness
+  vec3 emissive = u_material.Emissive;
+  if(u_material.UseEmissiveMap)
+  {
+    emissive = texture(u_material.EmissiveMap, vertex.UVs).rgb;
   }
 
   // material albedo 
@@ -353,9 +393,23 @@ void main()
   result += ComputePointLights(N, V, F0, albedo, roughness, metallic);
   result += ComputeSpotLights(N, V, F0, albedo, roughness, metallic);
 
-  result *= (1.0 - ComputeShadow(N, vec3(0.0)));
+  // occlusion and emissive 
+  result = (result * occlusion) + emissive;
 
-  // final color calculation
+  // compute shadow value
+  result *= (1.0 - ComputeShadow());
+
+  // output brightness 
+  if(dot(result, BLOOM_THRESHOD) > 1.0)
+  {
+    out_brightness = vec4(result, 1.0);
+  }
+  else
+  {
+    out_brightness = vec4(0.0, 0.0, 0.0, 1.0); 
+  }
+
+  // output fragment 
   out_fragment = vec4(result, 1.0);
 } 
 

@@ -8,14 +8,28 @@ namespace Empy
         EMPY_INLINE PbrShader(const std::string& filename): Shader(filename) 
         {
             u_UseRoughnessMap = glGetUniformLocation(m_ShaderID, "u_material.UseRoughnessMap");
+            u_UseOcclusionMap = glGetUniformLocation(m_ShaderID, "u_material.UseOcclusionMap");
+            u_UseEmissiveMap = glGetUniformLocation(m_ShaderID, "u_material.UseEmissiveMap");
             u_UseMetallicMap = glGetUniformLocation(m_ShaderID, "u_material.UseMetallicMap");
             u_UseAlbedoMap = glGetUniformLocation(m_ShaderID, "u_material.UseAlbedoMap");
             u_UseNormalMap = glGetUniformLocation(m_ShaderID, "u_material.UseNormalMap");
 
             u_RoughnessMap = glGetUniformLocation(m_ShaderID, "u_material.RoughnessMap");
+            u_OcclusionMap = glGetUniformLocation(m_ShaderID, "u_material.OcclusionMap");
+            u_EmissiveMap = glGetUniformLocation(m_ShaderID, "u_material.EmissiveMap");
             u_MetallicMap = glGetUniformLocation(m_ShaderID, "u_material.MetallicMap");
             u_AlbedoMap = glGetUniformLocation(m_ShaderID, "u_material.AlbedoMap");
             u_NormalMap = glGetUniformLocation(m_ShaderID, "u_material.NormalMap");
+
+            u_Roughness = glGetUniformLocation(m_ShaderID, "u_material.Roughness");
+            u_Occlusion = glGetUniformLocation(m_ShaderID, "u_material.Occlusion");
+            u_Emissive = glGetUniformLocation(m_ShaderID, "u_material.Emissive");
+            u_Metallic = glGetUniformLocation(m_ShaderID, "u_material.Metallic");
+            u_Albedo = glGetUniformLocation(m_ShaderID, "u_material.Albedo");
+
+            u_NbrDirectLight = glGetUniformLocation(m_ShaderID, "u_nbrDirectLight");
+            u_NbrPointLight = glGetUniformLocation(m_ShaderID, "u_nbrPointLight");
+            u_NbrSpotLight = glGetUniformLocation(m_ShaderID, "u_nbrSpotLight");
 
             u_PrefilMap = glGetUniformLocation(m_ShaderID, "u_prefilMap");            
             u_IrradMap = glGetUniformLocation(m_ShaderID, "u_irradMap");
@@ -23,14 +37,6 @@ namespace Empy
 
             u_LightSpace = glGetUniformLocation(m_ShaderID, "u_lightSpace");
             u_DepthMap = glGetUniformLocation(m_ShaderID, "u_depthMap");
-
-            u_NbrDirectLight = glGetUniformLocation(m_ShaderID, "u_nbrDirectLight");
-            u_NbrPointLight = glGetUniformLocation(m_ShaderID, "u_nbrPointLight");
-            u_NbrSpotLight = glGetUniformLocation(m_ShaderID, "u_nbrSpotLight");
-
-            u_Roughness = glGetUniformLocation(m_ShaderID, "u_material.Roughness");
-            u_Metallic = glGetUniformLocation(m_ShaderID, "u_material.Metallic");
-            u_Albedo = glGetUniformLocation(m_ShaderID, "u_material.Albedo");
 
             u_ViewPos = glGetUniformLocation(m_ShaderID, "u_viewPos");
             u_Model = glGetUniformLocation(m_ShaderID, "u_model");
@@ -103,8 +109,10 @@ namespace Empy
         {
             glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));   
 
+            glUniform3fv(u_Emissive, 1, &material.Emissive.x);
             glUniform3fv(u_Albedo, 1, &material.Albedo.x);
             glUniform1f(u_Roughness, material.Roughness);
+            glUniform1f(u_Occlusion, material.Occlusion);
             glUniform1f(u_Metallic, material.Metallic);
 
             int32_t unit = 4; // <-- starts at unit 4
@@ -129,6 +137,16 @@ namespace Empy
             useMap = material.RoughnessMap != nullptr;
             glUniform1i(u_UseRoughnessMap, useMap);
             if(useMap) { material.RoughnessMap->Use(u_RoughnessMap, unit++); }
+
+            // emissive map
+            useMap = material.EmissiveMap != nullptr;
+            glUniform1i(u_UseEmissiveMap, useMap);
+            if(useMap) { material.EmissiveMap->Use(u_EmissiveMap, unit++); }
+
+            // occlusion map
+            useMap = material.OcclusionMap != nullptr;
+            glUniform1i(u_UseOcclusionMap, useMap);
+            if(useMap) { material.OcclusionMap->Use(u_OcclusionMap, unit++); }
 
             // render model
             model->Draw(GL_TRIANGLES);        
@@ -187,14 +205,24 @@ namespace Empy
         uint32_t u_NbrSpotLight = 0u;        
         // --
         uint32_t u_UseRoughnessMap = 0u;
+        uint32_t u_UseOcclusionMap = 0u;
+        uint32_t u_UseEmissiveMap = 0u;
         uint32_t u_UseMetallicMap = 0u;
         uint32_t u_UseAlbedoMap = 0u;
         uint32_t u_UseNormalMap = 0u;
         // --
-        uint32_t u_RoughnessMap = 0u;
-        uint32_t u_MetallicMap = 0u;
-        uint32_t u_AlbedoMap = 0u;
-        uint32_t u_NormalMap = 0u;
+        uint32_t u_RoughnessMap = 0u; 
+        uint32_t u_OcclusionMap = 0u;  
+        uint32_t u_EmissiveMap = 0u;  
+        uint32_t u_MetallicMap = 0u;  
+        uint32_t u_AlbedoMap = 0u;    
+        uint32_t u_NormalMap = 0u;    
+        // --
+        uint32_t u_Roughness = 0u;
+        uint32_t u_Occlusion = 0u;
+        uint32_t u_Emissive = 0u;
+        uint32_t u_Metallic = 0u;
+        uint32_t u_Albedo = 0u;
         //--
         uint32_t u_PrefilMap = 0u;
         uint32_t u_IrradMap = 0u;
@@ -202,10 +230,6 @@ namespace Empy
         //--
         uint32_t u_LightSpace = 0u;
         uint32_t u_DepthMap = 0u;
-        // --
-        uint32_t u_Roughness = 0u;
-        uint32_t u_Metallic = 0u;
-        uint32_t u_Albedo = 0u;
         //--
         uint32_t u_ViewPos = 0u;
         uint32_t u_Model = 0u;

@@ -46,7 +46,10 @@ namespace Empy
         EMPY_INLINE void Draw(Model3D& model, Transform3D& transform)
         {
             glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));
+            
+            glCullFace(GL_FRONT);
             model->Draw(GL_TRIANGLES);
+            glCullFace(GL_BACK);
         }
 
         EMPY_INLINE void BeginFrame(const glm::mat4& lightSpaceMtx)

@@ -25,52 +25,47 @@ namespace Empy
 
         EMPY_INLINE void RunContext() 
         {
-            // load environment map
+            // load textures
             auto skymap = std::make_shared<Texture2D>("Resources/Textures/HDRs/Sky.hdr", true, true);
 
-            // // load textures
             // auto roughness = std::make_shared<Texture2D>("Resources/Textures/Marble/Roughness.png");
             // auto albedo = std::make_shared<Texture2D>("Resources/Textures/Marble/Albedo.png");
             // auto normal = std::make_shared<Texture2D>("Resources/Textures/Marble/Normal.png");
-            
+
             // load models
             auto sphereModel = std::make_shared<Model>("Resources/Models/sphere.fbx");
             auto cubeModel = std::make_shared<Model>("Resources/Models/cube.fbx");
 
             // create scene camera
             auto camera = CreateEntt<Entity>();                    
-            auto& tf = camera.Attach<TransformComponent>().Transform;
-            tf.Translate.y = 4.5f;
-            tf.Translate.z = 20.0f;
+            camera.Attach<TransformComponent>().Transform.Translate.z = 3.0f;
             camera.Attach<CameraComponent>();
 
-            // create environment entity
+            // skybox entity
             auto skybox = CreateEntt<Entity>();                    
             skybox.Attach<TransformComponent>();
             skybox.Attach<SkyboxComponent>();
 
             // create point light 1      
             auto slight = CreateEntt<Entity>();                    
-            slight.Attach<DirectLightComponent>().Light.Intensity = 0.0f;
+            slight.Attach<DirectLightComponent>().Light.Intensity = 5.0f;
             auto& stp = slight.Attach<TransformComponent>().Transform;
-            //stp.Rotation = glm::vec3(0.0f, 0.5f, -1.0f); 
-            stp.Rotation = glm::vec3(0.0f, 1.5f, -2.0f); 
+            stp.Rotation = glm::vec3(0.0f, 0.0f, -1.0f); 
 
             // create sphere entity
             auto sphere = CreateEntt<Entity>();
-            sphere.Attach<ModelComponent>().Model = sphereModel;
-            auto& ts = sphere.Attach<TransformComponent>().Transform;
-            ts.Translate.y = 6.0f;
-            ts.Translate.z = -0.65f;
-            ts.Scale *= 6.0f;
+            auto& mod = sphere.Attach<ModelComponent>();
+            mod.Model = sphereModel;
+            mod.Material.Emissive = glm::vec3(1.0f);
+            mod.Material.Albedo = glm::vec3(0.8f, 0.1f, 0.8f);
+            sphere.Attach<TransformComponent>().Transform.Translate.x = -1.0f;
 
-            // create plane entity
+            // create cube entity
             auto cube = CreateEntt<Entity>();
-            cube.Attach<ModelComponent>().Model = cubeModel;
-            auto& tc = cube.Attach<TransformComponent>().Transform; 
-            tc.Scale.x = 20.0f;
-            tc.Scale.z = 20.0f;
-            tc.Scale.y = 0.5f;
+            auto& mod1 = cube.Attach<ModelComponent>();
+            mod1.Model = cubeModel;
+            mod1.Material.Albedo = glm::vec3(0.1f, 0.0f, 0.5f);
+            cube.Attach<TransformComponent>().Transform.Translate.x = 1.0f;
 
             // generate enviroment maps
             EnttView<Entity, SkyboxComponent>([this, &skymap] (auto entity, auto& comp) 
@@ -187,7 +182,7 @@ namespace Empy
                     m_Context->Renderer->DrawDepth(comp.Model, transform);  
 
                     float delta = 0.0166666f;
-                    if(3 == (uint32_t)entity.ID())
+                    if(4 == (uint32_t)entity.ID())
                     {
                         if(m_Context->Window->IsKey(GLFW_KEY_LEFT))
                             transform.Translate.x -= delta;
@@ -207,7 +202,6 @@ namespace Empy
                 // ffinalize frame
                 m_Context->Renderer->EndShadowPass();
             });
-
         }
     };
 }
