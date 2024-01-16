@@ -21,12 +21,12 @@ namespace Empy
         EMPY_INLINE PbrMaterial(const PbrMaterial&) = default;
         EMPY_INLINE PbrMaterial() = default;
 
+        glm::vec3 Albedo = glm::vec3(0.5f, 0.5f, 0.6f);
         glm::vec3 Emissive = glm::vec3(0.0f);
-        glm::vec3 Albedo = glm::vec3(1.0);
 
         float Occlusion = 1.0f;
-        float Roughness = 0.3f;
-        float Metallic = 0.5f;
+        float Roughness = 0.5f;
+        float Metallic = 0.6f;
 
         Texture OcclusionMap;
         Texture RoughnessMap;

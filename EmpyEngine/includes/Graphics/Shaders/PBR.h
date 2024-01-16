@@ -42,7 +42,34 @@ namespace Empy
             u_Model = glGetUniformLocation(m_ShaderID, "u_model");
             u_View = glGetUniformLocation(m_ShaderID, "u_view");
             u_Proj = glGetUniformLocation(m_ShaderID, "u_proj");
+            
+            u_HasJoints = glGetUniformLocation(m_ShaderID, "u_hasJoints");
         } 
+
+        EMPY_INLINE void SetEnvMaps(uint32_t irrad, uint32_t prefil, uint32_t brdf, uint32_t depthMap)
+        {
+            glUseProgram(m_ShaderID);
+
+            // irradiance map
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, irrad);
+            glUniform1i(u_IrradMap, 0);
+
+            // prefiltered map
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, prefil);
+            glUniform1i(u_PrefilMap, 1);
+
+            // BRDF Map
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, brdf);
+            glUniform1i(u_BrdfMap, 2);
+
+            // Depth Map
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, depthMap);
+            glUniform1i(u_DepthMap, 3);
+        }
 
         EMPY_INLINE void SetDirectLight(DirectLight& light, Transform3D& transform, int32_t index) 
         {
@@ -57,12 +84,6 @@ namespace Empy
             glUniform3fv(u_direction, 1, &transform.Rotation.x);
             glUniform3fv(u_radiance, 1, &light.Radiance.x);
             glUniform1f(u_intensity, light.Intensity);
-        }
-
-        EMPY_INLINE void SetLightSpaceMatrix(const glm::mat4& lightSpaceMtx)
-        {
-            // set view projection matrix
-            glUniformMatrix4fv(u_LightSpace, 1, GL_FALSE, glm::value_ptr(lightSpaceMtx));  
         }
 
         EMPY_INLINE void SetPointLight(PointLight& light, Transform3D& transform, int32_t index) 
@@ -159,29 +180,21 @@ namespace Empy
             glUniform3fv(u_ViewPos, 1, &transform.Translate.x);
         } 
 
-        EMPY_INLINE void SetEnvMaps(uint32_t irrad, uint32_t prefil, uint32_t brdf, uint32_t depthMap)
+        EMPY_INLINE void SetLightSpaceMatrix(const glm::mat4& lightSpaceMtx)
         {
-            glUseProgram(m_ShaderID);
-
-            // irradiance map
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, irrad);
-            glUniform1i(u_IrradMap, 0);
-
-            // prefiltered map
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, prefil);
-            glUniform1i(u_PrefilMap, 1);
-
-            // BRDF Map
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, brdf);
-            glUniform1i(u_BrdfMap, 2);
-
-            // Depth Map
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, depthMap);
-            glUniform1i(u_DepthMap, 3);
+            // set view projection matrix
+            glUniformMatrix4fv(u_LightSpace, 1, GL_FALSE, glm::value_ptr(lightSpaceMtx));  
+        }
+       
+        EMPY_INLINE void SetJoints(std::vector<glm::mat4>& transforms) 
+        {
+            for (size_t i = 0; i < transforms.size() && i < 100; ++i) 
+            {
+                std::string uniform = "u_joints[" + std::to_string(i) + "]";
+                uint32_t u_joint = glGetUniformLocation(m_ShaderID, uniform.c_str());
+                glUniformMatrix4fv(u_joint, 1, GL_FALSE, glm::value_ptr(transforms[i]));
+            }
+            glUniform1i(u_HasJoints, !transforms.empty()); 
         }
 
         EMPY_INLINE void SetDirectLightCount(int32_t count)
@@ -200,6 +213,9 @@ namespace Empy
         }
 
     private:     
+        uint32_t u_HasJoints = 0u;
+
+        //-- light
         uint32_t u_NbrDirectLight = 0u;
         uint32_t u_NbrPointLight = 0u;
         uint32_t u_NbrSpotLight = 0u;        

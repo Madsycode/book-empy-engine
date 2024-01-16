@@ -4,10 +4,11 @@ layout (location = 1) in vec3 a_normal;
 layout (location = 2) in vec2 a_uvs;
 layout (location = 3) in vec3 a_tangent;
 layout (location = 4) in vec3 a_bitangent;
+layout (location = 5) in ivec4 a_joints;
+layout (location = 6) in vec4 a_weights;
 
-uniform mat4 u_model;
-uniform mat4 u_proj;
-uniform mat4 u_view;
+#define MAX_WEIGHTS 4
+#define MAX_JOINTS 100
 
 out Vertex
 {
@@ -17,13 +18,33 @@ out Vertex
   vec2 UVs;
 } vertex;
  
+uniform mat4 u_model;
+uniform mat4 u_proj;
+uniform mat4 u_view;
+
+uniform mat4 u_joints[MAX_JOINTS];
+uniform bool u_hasJoints = false;
+
 void main() 
-{       
+{     
+  mat4 transform = mat4(1.0);
+
+  if(u_hasJoints)
+  {
+   	transform = mat4(0.0);
+    
+    for(int i = 0; i < MAX_WEIGHTS && a_joints[i] > -1; i++)
+    {
+      transform += u_joints[a_joints[i]] * a_weights[i];
+    }
+  }
+
   vertex.UVs = a_uvs;
-  vertex.Normal = (u_model * vec4(a_normal, 1.0)).xyz;
-  vertex.Position = (u_model * vec4(a_position, 1.0)).xyz;
-  gl_Position = u_proj * u_view * u_model * vec4(a_position, 1.0);
-  vertex.TBN = mat3(u_model) * mat3(a_tangent, a_bitangent, a_normal);
+  transform = u_model * transform;
+  vertex.Normal = mat3(transform) * a_normal;
+  vertex.Position = (transform * vec4(a_position, 1.0)).xyz;
+  gl_Position = u_proj * u_view * transform * vec4(a_position, 1.0);
+  vertex.TBN = mat3(transform) * mat3(a_tangent, a_bitangent, a_normal);
 }
 
 ++VERTEX++

@@ -76,6 +76,14 @@ namespace Empy
         Model3D Model; 
     };
 
+    // model animator
+    struct AnimatorComponent 
+    { 
+        EMPY_INLINE AnimatorComponent(const AnimatorComponent&) = default;
+        EMPY_INLINE AnimatorComponent() = default; 
+        Animator3D Animator;
+    };
+
     // mesh component
     struct MeshComponent 
     { 

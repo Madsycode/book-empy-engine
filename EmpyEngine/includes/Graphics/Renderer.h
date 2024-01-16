@@ -81,6 +81,11 @@ namespace Empy
             m_Pbr->Draw(model, material, transform);
         }
 
+        EMPY_INLINE void SetJoints(std::vector<glm::mat4>& transforms) 
+        {
+            m_Pbr->SetJoints(transforms);
+        }
+
         EMPY_INLINE void DrawDepth(Model3D& model, Transform3D& transform)
         {
             m_Shadow->Draw(model, transform);

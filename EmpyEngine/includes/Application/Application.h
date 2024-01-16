@@ -27,45 +27,31 @@ namespace Empy
         {
             // load textures
             auto skymap = std::make_shared<Texture2D>("Resources/Textures/HDRs/Sky.hdr", true, true);
-
-            // auto roughness = std::make_shared<Texture2D>("Resources/Textures/Marble/Roughness.png");
-            // auto albedo = std::make_shared<Texture2D>("Resources/Textures/Marble/Albedo.png");
-            // auto normal = std::make_shared<Texture2D>("Resources/Textures/Marble/Normal.png");
-
             // load models
-            auto sphereModel = std::make_shared<Model>("Resources/Models/sphere.fbx");
-            auto cubeModel = std::make_shared<Model>("Resources/Models/cube.fbx");
+            auto walking = std::make_shared<SkeletalModel>("Resources/Models/Walking.fbx");
 
             // create scene camera
             auto camera = CreateEntt<Entity>();                    
             camera.Attach<TransformComponent>().Transform.Translate.z = 3.0f;
             camera.Attach<CameraComponent>();
 
+            auto light = CreateEntt<Entity>();                    
+            light.Attach<DirectLightComponent>().Light.Intensity = 0.0f;
+            auto& td = light.Attach<TransformComponent>().Transform;
+            td.Rotation = glm::vec3(0.0f, 0.0f, -1.0f);
+
             // skybox entity
             auto skybox = CreateEntt<Entity>();                    
             skybox.Attach<TransformComponent>();
             skybox.Attach<SkyboxComponent>();
 
-            // create point light 1      
-            auto slight = CreateEntt<Entity>();                    
-            slight.Attach<DirectLightComponent>().Light.Intensity = 5.0f;
-            auto& stp = slight.Attach<TransformComponent>().Transform;
-            stp.Rotation = glm::vec3(0.0f, 0.0f, -1.0f); 
-
             // create sphere entity
-            auto sphere = CreateEntt<Entity>();
-            auto& mod = sphere.Attach<ModelComponent>();
-            mod.Model = sphereModel;
-            mod.Material.Emissive = glm::vec3(1.0f);
-            mod.Material.Albedo = glm::vec3(0.8f, 0.1f, 0.8f);
-            sphere.Attach<TransformComponent>().Transform.Translate.x = -1.0f;
-
-            // create cube entity
-            auto cube = CreateEntt<Entity>();
-            auto& mod1 = cube.Attach<ModelComponent>();
-            mod1.Model = cubeModel;
-            mod1.Material.Albedo = glm::vec3(0.1f, 0.0f, 0.5f);
-            cube.Attach<TransformComponent>().Transform.Translate.x = 1.0f;
+            auto robot = CreateEntt<Entity>();
+            robot.Attach<ModelComponent>().Model = walking;
+            auto& tr = robot.Attach<TransformComponent>().Transform;
+            tr.Translate = glm::vec3(0.0f, -3.5f, -6.0f);
+            tr.Scale = glm::vec3(0.045f);
+            robot.Attach<AnimatorComponent>().Animator = walking->GetAnimator();
 
             // generate enviroment maps
             EnttView<Entity, SkyboxComponent>([this, &skymap] (auto entity, auto& comp) 
@@ -88,7 +74,7 @@ namespace Empy
                     auto& transform = entity.template Get<TransformComponent>().Transform;
                     m_Context->Renderer->SetCamera(comp.Camera, transform);
                 });
-
+              
                 // set shader point lights
                 int32_t lightCounter = 0u;
                 EnttView<Entity, PointLightComponent>([this, &lightCounter] (auto entity, auto& comp) 
@@ -132,6 +118,14 @@ namespace Empy
                 // render models
                 EnttView<Entity, ModelComponent>([this] (auto entity, auto& comp) 
                 {      
+                    // compute key frames
+                    if(entity.Has<AnimatorComponent>())
+                    {
+                        auto& animator = entity.Get<AnimatorComponent>().Animator;
+                        auto& transforms = animator->Animate(0.016666f);
+                        m_Context->Renderer->SetJoints(transforms);
+                    }
+
                     auto& transform = entity.template Get<TransformComponent>().Transform;
                     m_Context->Renderer->Draw(comp.Model, comp.Material, transform);    
                 });  
