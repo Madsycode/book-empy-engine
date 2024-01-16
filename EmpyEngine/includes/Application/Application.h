@@ -151,21 +151,7 @@ namespace Empy
             {
                 // light direction
                 auto& lightDir = light.template Get<TransformComponent>().Transform.Rotation;
-                float delta = 0.0166666f;
-
-                if(m_Context->Window->IsKey(GLFW_KEY_A))
-                    lightDir.x -= delta;
-                if(m_Context->Window->IsKey(GLFW_KEY_D))
-                    lightDir.x += delta;
-                if(m_Context->Window->IsKey(GLFW_KEY_W))
-                    lightDir.y -= delta;
-                if(m_Context->Window->IsKey(GLFW_KEY_S))
-                    lightDir.y += delta;
-                if(m_Context->Window->IsKey(GLFW_KEY_E))
-                    lightDir.z -= delta;
-                if(m_Context->Window->IsKey(GLFW_KEY_R))
-                    lightDir.z += delta;
-
+               
                 // begin rendering
                 m_Context->Renderer->BeginShadowPass(lightDir);
 
@@ -173,24 +159,7 @@ namespace Empy
                 EnttView<Entity, ModelComponent>([this, &lightDir] (auto entity, auto& comp) 
                 {      
                     auto& transform = entity.template Get<TransformComponent>().Transform;
-                    m_Context->Renderer->DrawDepth(comp.Model, transform);  
-
-                    float delta = 0.0166666f;
-                    if(4 == (uint32_t)entity.ID())
-                    {
-                        if(m_Context->Window->IsKey(GLFW_KEY_LEFT))
-                            transform.Translate.x -= delta;
-                        if(m_Context->Window->IsKey(GLFW_KEY_RIGHT))
-                            transform.Translate.x += delta;
-                        if(m_Context->Window->IsKey(GLFW_KEY_UP))
-                            transform.Translate.y += delta;
-                        if(m_Context->Window->IsKey(GLFW_KEY_DOWN))
-                            transform.Translate.y -= delta;
-                        if(m_Context->Window->IsKey(GLFW_KEY_KP_0))
-                            transform.Translate.z -= delta;
-                        if(m_Context->Window->IsKey(GLFW_KEY_KP_1))
-                            transform.Translate.z += delta;                                                 
-                    }
+                    m_Context->Renderer->DrawDepth(comp.Model, transform);                     
                 }); 
 
                 // ffinalize frame
