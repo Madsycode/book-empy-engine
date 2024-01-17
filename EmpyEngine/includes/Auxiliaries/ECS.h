@@ -1,6 +1,6 @@
 #pragma once
 #include <entt/entt.hpp>
-#include "Graphics/Utilities/Data.h"
+#include "Physics/Utilities.h"
 
 namespace Empy
 {
@@ -75,6 +75,22 @@ namespace Empy
         PbrMaterial Material; 
         Model3D Model; 
     };
+
+    // rigid body component
+    struct RigidBodyComponent 
+    {
+        EMPY_INLINE RigidBodyComponent(const RigidBodyComponent&) = default;
+        EMPY_INLINE RigidBodyComponent() = default; 
+        RigidBody3D RigidBody;
+    }; 
+
+    // collider component
+    struct ColliderComponent 
+    {
+        EMPY_INLINE ColliderComponent(const ColliderComponent&) = default;
+        EMPY_INLINE ColliderComponent() = default; 
+        Collider3D Collider;
+    }; 
 
     // model animator
     struct AnimatorComponent 
