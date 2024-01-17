@@ -5,6 +5,7 @@ opengl/system
 spdlog/1.12.0
 assimp/5.2.2
 entt/3.12.2
+physx/4.1.1
 glfw/3.3.8
 glew/2.2.0
 
@@ -13,5 +14,6 @@ cmake
 
 [options]
 assimp:shared=False
+physx:shared=True
 glew:shared=False
 glfw:shared=False

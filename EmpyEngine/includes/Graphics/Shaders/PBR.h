@@ -129,6 +129,7 @@ namespace Empy
         EMPY_INLINE void Draw(Model3D& model, PbrMaterial& material, Transform3D& transform)
         {
             glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));   
+            glUniform1i(u_HasJoints, model->HasJoint()); 
 
             glUniform3fv(u_Emissive, 1, &material.Emissive.x);
             glUniform3fv(u_Albedo, 1, &material.Albedo.x);
@@ -194,7 +195,6 @@ namespace Empy
                 uint32_t u_joint = glGetUniformLocation(m_ShaderID, uniform.c_str());
                 glUniformMatrix4fv(u_joint, 1, GL_FALSE, glm::value_ptr(transforms[i]));
             }
-            glUniform1i(u_HasJoints, !transforms.empty()); 
         }
 
         EMPY_INLINE void SetDirectLightCount(int32_t count)

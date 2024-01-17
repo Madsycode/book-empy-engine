@@ -26,6 +26,20 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     ${CONAN_LIBS}     
 )
 
+# copy .dll files
+if (MSVC)
+    foreach(directory ${CONAN_BIN_DIRS})
+        file(GLOB dllfiles ${directory}/*.dll)
+        foreach(dllfile ${dllfiles})
+            if (EXISTS ${dllfile})
+                add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD 
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+                    ${dllfile} ${EXECUTABLE_OUTPUT_PATH})
+            endif()
+        endforeach()
+    endforeach()
+endif(MSVC)
+
 # copy resources
 if(EXISTS ${CMAKE_SOURCE_DIR}/Resources)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND 

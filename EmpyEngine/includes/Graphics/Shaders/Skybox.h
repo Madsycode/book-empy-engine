@@ -31,6 +31,7 @@ namespace Empy
 			glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMap);
 			glUniform1i(u_Map, 0);
             RenderSkyboxMesh(mesh);
+            glUseProgram(0); 
         }
 
     private:

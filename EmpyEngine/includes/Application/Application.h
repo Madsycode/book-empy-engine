@@ -32,11 +32,11 @@ namespace Empy
 
             // create scene camera
             auto camera = CreateEntt<Entity>();                    
-            camera.Attach<TransformComponent>().Transform.Translate.z = 3.0f;
+            camera.Attach<TransformComponent>().Transform.Translate.z = 20.0f;
             camera.Attach<CameraComponent>();
 
             auto light = CreateEntt<Entity>();                    
-            light.Attach<DirectLightComponent>().Light.Intensity = 0.0f;
+            light.Attach<DirectLightComponent>().Light.Intensity = 1.0f;
             auto& td = light.Attach<TransformComponent>().Transform;
             td.Rotation = glm::vec3(0.0f, 0.0f, -1.0f);
 
@@ -49,13 +49,12 @@ namespace Empy
             auto robot = CreateEntt<Entity>();
             robot.Attach<ModelComponent>().Model = walking;
             auto& tr = robot.Attach<TransformComponent>().Transform;
-            tr.Translate = glm::vec3(0.0f, -3.5f, -6.0f);
-            tr.Scale = glm::vec3(0.045f);
+            tr.Translate = glm::vec3(0.0f, -10.0f, -10.0f);
+            tr.Scale = glm::vec3(0.1f);
             robot.Attach<AnimatorComponent>().Animator = walking->GetAnimator();
 
             // generate enviroment maps
-            EnttView<Entity, SkyboxComponent>([this, &skymap] (auto entity, auto& comp) 
-            {      
+            EnttView<Entity, SkyboxComponent>([this, &skymap] (auto entity, auto& comp) {      
                 m_Context->Renderer->InitSkybox(comp.Sky, skymap, 2048);
             });
 
@@ -108,13 +107,6 @@ namespace Empy
                 // set number of spot lights
                 m_Context->Renderer->SetSpotLightCount(lightCounter);
 
-                // render skybox
-                EnttView<Entity, SkyboxComponent>([this] (auto entity, auto& comp) 
-                {      
-                    auto& transform = entity.template Get<TransformComponent>().Transform;
-                    m_Context->Renderer->DrawSkybox(comp.Sky, transform);
-                });
-
                 // render models
                 EnttView<Entity, ModelComponent>([this] (auto entity, auto& comp) 
                 {      
@@ -130,8 +122,16 @@ namespace Empy
                     m_Context->Renderer->Draw(comp.Model, comp.Material, transform);    
                 });  
 
+                // render skybox
+                EnttView<Entity, SkyboxComponent>([this] (auto entity, auto& comp) 
+                {      
+                    auto& transform = entity.template Get<TransformComponent>().Transform;
+                    m_Context->Renderer->DrawSkybox(comp.Sky, transform);                    
+                });
+
                 // end frame                
                 m_Context->Renderer->EndFrame();            
+
 
                 // update layers
                 for(auto layer : m_Context->Layers)

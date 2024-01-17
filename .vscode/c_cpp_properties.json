@@ -10,6 +10,7 @@
                 "C:/Users/pouhela/.conan/data/fmt/10.0.0/_/_/package/2c52a23dc25833dd4323e8144302393f0061b96b/include",
                 "C:/Users/pouhela/.conan/data/glfw/3.3.8/_/_/package/31c2c71c44814e8d984537ce6956786f6cc9028a/include",
                 "C:/Users/pouhela/.conan/data/glew/2.2.0/_/_/package/187c86e330f71652b242085ff4304d46863f17ab/include",
+                "C:/.conan/30db31/1/include", // <-- physx
                 "${workspaceFolder}/EmpyEngine/includes",
                 "${workspaceFolder}/EmpyEditor/src",
                 "${workspaceFolder}/EmpyGame/src"

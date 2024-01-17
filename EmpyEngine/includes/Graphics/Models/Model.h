@@ -10,6 +10,7 @@ namespace Empy
 	// abstract model
 	struct Model 
 	{
+		EMPY_INLINE virtual bool HasJoint() { return false; }
 		EMPY_INLINE virtual void Load(const std::string&) {}
 		EMPY_INLINE virtual void Draw(uint32_t mode) {}
 	};	
@@ -119,6 +120,8 @@ namespace Empy
 		}
 
 		EMPY_INLINE SkeletalModel() = default;		
+
+		EMPY_INLINE bool HasJoint() override final { return m_JointCount; }
 
 		EMPY_INLINE void Load(const std::string& path) override final
         {
