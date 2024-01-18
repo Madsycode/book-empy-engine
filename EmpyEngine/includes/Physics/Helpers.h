@@ -6,6 +6,7 @@ using namespace physx;
 
 namespace Empy
 {
+    
     // helper function to convert PhysX Vec3 to GLM vec3
     EMPY_INLINE glm::vec3 PxToVec3(const PxVec3& physxVec) 
     {

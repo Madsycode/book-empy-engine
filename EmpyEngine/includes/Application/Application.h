@@ -151,7 +151,7 @@ namespace Empy
             auto light = CreateEntt<Entity>();                    
             light.Attach<DirectLightComponent>().Light.Intensity = 1.0f;
             auto& td = light.Attach<TransformComponent>().Transform;
-            td.Rotation = glm::vec3(0.0f, 2.0f, -1.0f);
+            td.Rotation = glm::vec3(0.0f, 1.0f, -1.0f);
 
             // create skybox entity
             auto skybox = CreateEntt<Entity>();                    

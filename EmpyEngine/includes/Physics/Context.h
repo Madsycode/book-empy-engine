@@ -62,7 +62,7 @@ namespace Empy
                 m_Scene->fetchResults(true); 
             }
         }
-        
+                
         EMPY_INLINE void AddActor(RigidBody3D& body, Transform3D& transform)
         {            
             // set friction and restitution 
@@ -121,8 +121,12 @@ namespace Empy
             {
                 PxSphereGeometry sphere(transform.Scale.x/2.0f);
                 collider.Shape = m_Physics->createShape(sphere, *collider.Material);
+            }   
+            else if(collider.Type == Collider3D::MESH)
+            {
+                collider.Shape = m_Physics->createShape(collider.Mesh, *collider.Material, true);
             }            
-            else
+            else 
             {
                 EMPY_ERROR("Error creating collider invalid type");
                 return;
@@ -153,7 +157,42 @@ namespace Empy
             // add actor to the m_Scene
             m_Scene->addActor(*body.Actor);               
         }
-      
+
+        EMPY_INLINE PxConvexMeshGeometry CookMesh(const MeshData<ShadedVertex>& data) 
+        {          
+            // px vertex container
+            std::vector<PxVec3> vertices;
+
+            // convert position attributes
+            for(auto& vertex : data.Vertices)
+            {
+                vertices.push_back(ToPxVec3(vertex.Position));
+            }
+
+            PxConvexMeshDesc meshDesc;
+            // vertices
+            meshDesc.points.data = vertices.data();
+            meshDesc.points.stride = sizeof(PxVec3);
+            meshDesc.points.count = vertices.size();
+            // indices 
+            meshDesc.indices.data = data.Indices.data();
+            meshDesc.indices.count = data.Indices.size();
+            // flags
+            meshDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
+
+            // cooking the mesh
+            PxTolerancesScale default;
+            PxCookingParams cookingParams = PxCookingParams(default);    
+            PxCooking* cooking = PxCreateCooking(PX_PHYSICS_VERSION, *m_Foundation, cookingParams);
+            PxConvexMeshCookingResult::Enum result;            
+            PxConvexMesh* convexMesh = cooking->createConvexMesh(meshDesc, 
+            m_Physics->getPhysicsInsertionCallback(), &result);
+            PxConvexMeshGeometry convexMeshGeometry(convexMesh);
+
+            cooking->release();
+            return convexMeshGeometry;
+        }
+
     private:
         PxDefaultErrorCallback m_ErrorCallback;
         PxDefaultAllocator m_AllocatorCallback;

@@ -34,6 +34,9 @@ namespace Empy
         float StaticFriction = 0.4f;
         float Restitution = 0.1f;
 
+        // mesh for custom shape
+        PxConvexMeshGeometry Mesh;
+
         // collider geometry shape
         PxShape* Shape = nullptr;
 
