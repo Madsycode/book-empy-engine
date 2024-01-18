@@ -37,11 +37,15 @@ namespace Empy
             // create environm. maps
             CreateSkyboxEnvMaps();
 
+
             // application main loop
             while(m_Context->Window->PollEvents())
             {
+                // compute and update delta time value
+                ComputeFrameDeltaTime();
+
                 // run and fetch physics simulation
-                UpdatePhysics(1.0f/60.0f);
+                RunPhysicsSimulation();
 
                 // render scene shadow map
                 RenderSceneDepthMap();
@@ -51,21 +55,27 @@ namespace Empy
 
                 // update all layers
                 UpdateAppLayers();
-
-                // show scene to screen
-                m_Context->Renderer->ShowFrame();
             }
 
             // destroy physics actors
             DestroyPhysicsActors();
         }
 
-    private:               
-        // runs physics simulation and fetch
-        EMPY_INLINE void UpdatePhysics(float dt)
+    private:        
+        // computes frame delta time value
+        EMPY_INLINE void ComputeFrameDeltaTime()
+        {
+            static double sLastTime = glfwGetTime();
+            double currentTime = glfwGetTime();
+            m_Context->DeltaTime = (currentTime - sLastTime);         
+            sLastTime = currentTime;
+        }
+
+        // runs physics and fetch physics
+        EMPY_INLINE void RunPhysicsSimulation()
         {
             // compute physx
-            m_Context->Physics->Simulate(1, dt);      
+            m_Context->Physics->Simulate(1, m_Context->DeltaTime);      
 
             // start physics
             EnttView<Entity, RigidBodyComponent>([this] (auto entity, auto& comp) 
@@ -77,7 +87,7 @@ namespace Empy
                 transform.Translate = PxToVec3(pose.p);
             }); 
         }
-        
+
         // destroys all actors and colliders
         EMPY_INLINE void DestroyPhysicsActors()
         {
@@ -90,6 +100,18 @@ namespace Empy
                     collider.Shape->release();
                 }
                 comp.RigidBody.Actor->release();
+            });
+        }
+
+        // creates maps for ambient lighting
+        EMPY_INLINE void CreateSkyboxEnvMaps()
+        {
+            // load environment map
+            auto skymap = std::make_shared<Texture2D>("Resources/Textures/HDRs/Sky.hdr", true, true);
+
+            // generate enviroment maps
+            EnttView<Entity, SkyboxComponent>([this, &skymap] (auto entity, auto& comp) {      
+                m_Context->Renderer->InitSkybox(comp.Sky, skymap, 2048);
             });
         }
 
@@ -204,19 +226,7 @@ namespace Empy
                 tc.Transform.Scale *= 5.0f;
             }
         }
-       
-        // creates maps for ambient lighting
-        EMPY_INLINE void CreateSkyboxEnvMaps()
-        {
-            // load environment map
-            auto skymap = std::make_shared<Texture2D>("Resources/Textures/HDRs/Sky.hdr", true, true);
-
-            // generate enviroment maps
-            EnttView<Entity, SkyboxComponent>([this, &skymap] (auto entity, auto& comp) {      
-                m_Context->Renderer->InitSkybox(comp.Sky, skymap, 2048);
-            });
-        }
-        
+               
         // renders scene to the frame buffer
         EMPY_INLINE void RenderSceneToFBO()
         {
@@ -270,7 +280,7 @@ namespace Empy
                 if(entity.template Has<AnimatorComponent>())
                 {
                     auto& animator = entity.template Get<AnimatorComponent>().Animator;
-                    auto& transforms = animator->Animate(0.016666f);
+                    auto& transforms = animator->Animate(m_Context->DeltaTime);
                     m_Context->Renderer->SetJoints(transforms);
                 }
 
@@ -296,6 +306,9 @@ namespace Empy
             {
                 layer->OnUpdate();
             }    
-        }
+
+            // show scene to screen
+            m_Context->Renderer->ShowFrame();
+        }               
     };
 }

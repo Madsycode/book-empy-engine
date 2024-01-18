@@ -17,6 +17,7 @@ namespace Empy
             Window = std::make_unique<AppWindow>(&Dispatcher, 1280, 720, "Empy Engine");
             Renderer = std::make_unique<GraphicsRenderer>(1280, 720);
             Physics = std::make_unique<PhysicsContext>();
+            DeltaTime = 0.0;
         }
 
         EMPY_INLINE ~AppContext()
@@ -33,5 +34,6 @@ namespace Empy
         std::unique_ptr<AppWindow> Window;
         EventDispatcher Dispatcher;
         EntityRegistry Scene;
+        double DeltaTime;
     };
 }
