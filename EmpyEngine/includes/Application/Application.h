@@ -19,6 +19,8 @@ namespace Empy
             CreatePhysicsActors();
             // create environm. maps
             CreateSkyboxEnvMaps();
+            // start script instances
+            StartScriptInstances();
         }
 
         // destroy application context
@@ -37,6 +39,9 @@ namespace Empy
             {   
                 // compute and update delta time value
                 ComputeFrameDeltaTime();
+
+                // call update func script instances
+                UpdateScriptInstances();
 
                 // run and fetch physics simulation
                 RunPhysicsSimulation();
@@ -58,7 +63,30 @@ namespace Empy
             // set physics event callback
             m_Context->Physics->SetEventCallback([this] (auto e)
             {
-                // coming later in scripting
+                // do not report if invalid entities        
+                if(!m_Context->Scene.valid(e.Entity1) || 
+                !m_Context->Scene.valid(e.Entity2)) 
+                { return; }
+
+                PostTask([this, e] 
+                {
+                    auto entity1 = ToEntt<Entity>(e.Entity1);
+                    auto entity2 = ToEntt<Entity>(e.Entity2);
+
+                    // entity 1 call script on-collision  
+                    if(entity1.template Has<ScriptComponent>())
+                    {
+                        entity1.template Get<ScriptComponent>().
+                        Instance->OnCollision(e.Entity2);
+                    }
+
+                    // entity 2 call script on-collision                  
+                    if(entity2.template Has<ScriptComponent>())
+                    {
+                        entity2.template Get<ScriptComponent>().
+                        Instance->OnCollision(e.Entity1);
+                    }
+                });
             });
 
             // attach window resize event callback
@@ -66,7 +94,71 @@ namespace Empy
             {
                 // resire renderer frame buffer
                 m_Context->Renderer->Resize(e.Width, e.Height);
+
+                // call scripts resize function
+                EnttView<Entity, ScriptComponent>([e] 
+                (auto entity, auto& script) 
+                {
+                    if(script.Instance) 
+                    { 
+                        script.Instance->OnResize(e.Width, e.Height); 
+                    }
+                });
             });    
+
+            // register mouse down callback
+            AttachCallback<MouseDownEvent>([this] (auto e) 
+            {
+                // call scripts mouse down callback
+                EnttView<Entity, ScriptComponent>([e] 
+                (auto entity, auto& script) 
+                {
+                    if(script.Instance) 
+                    { 
+                        script.Instance->OnMouseDown(e.Button); 
+                    }
+                });
+            });
+
+            // register key down callback
+            AttachCallback<KeyPressEvent>([this] (auto e) 
+            {
+                // call scripts mouse down callback
+                EnttView<Entity, ScriptComponent>([e] 
+                (auto entity, auto& script) 
+                {
+                    if(script.Instance) 
+                    { 
+                        script.Instance->OnKeyDown(e.Key); 
+                    }
+                });
+            });
+        }
+
+        // call script instances update funcs 
+        EMPY_INLINE void UpdateScriptInstances()
+        {
+            EnttView<Entity, ScriptComponent>([this] 
+            (auto entity, auto& script) 
+            {
+                if(script.Instance)
+                {
+                    script.Instance->OnUpdate(m_Context->DeltaTime);
+                }
+            });
+        }
+
+        // call script instances start funcs 
+        EMPY_INLINE void StartScriptInstances()
+        {
+            EnttView<Entity, ScriptComponent>([this] 
+            (auto entity, auto& script) 
+            {
+                if(script.Instance)
+                {
+                    script.Instance->OnStart();
+                }
+            });
         }
 
         // computes frame delta time value
@@ -164,7 +256,7 @@ namespace Empy
         // creates entities with components
         EMPY_INLINE void CreateSceneEntities()
         {
-            // load models
+             // load models
             auto walking = std::make_shared<SkeletalModel>("Resources/Models/Walking.fbx");
             auto sphereModel = std::make_shared<StaticModel>("Resources/Models/sphere.fbx");
             auto cubeModel = std::make_shared<StaticModel>("Resources/Models/cube.fbx");
@@ -193,6 +285,9 @@ namespace Empy
             tr.Translate = glm::vec3(0.0f, -14.99f, -15.0f);
             tr.Scale = glm::vec3(0.1f);
 
+            auto scriptName = m_Context->Scripts->
+            LoadScript("Resources/Scripts/TestScript.lua");
+
             // create plane entity (ground)
             auto plane = CreateEntt<Entity>();
             plane.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::STATIC;
@@ -203,26 +298,16 @@ namespace Empy
             tp.Scale = glm::vec3(100.0f, 1.0f, 100.0f);
 
             // create robot entity
-            for(uint32_t i = 0; i < 100; i++)
-            {
-                auto sphere = CreateEntt<Entity>();
-                sphere.Attach<ModelComponent>().Model = sphereModel;
-                sphere.Attach<ColliderComponent>().Collider.Type = Collider3D::SPHERE;
-                sphere.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::DYNAMIC;
-                auto& tc = sphere.Attach<TransformComponent>().Transform;
-                tc.Translate = glm::vec3(0.0f, 5.0f * i, -10.0f);
-                tc.Scale *= 5.0f; 
-            }
-
-            // create robot entity
-            for(uint32_t i = 0; i < 100; i++)
+            for(int i = 0; i < 5; i++)
             {
                 auto cube = CreateEntt<Entity>();
                 cube.Attach<ModelComponent>().Model = cubeModel;
+                m_Context->Scripts->AttachScript(cube, scriptName); 
                 cube.Attach<ColliderComponent>().Collider.Type = Collider3D::BOX;
                 cube.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::DYNAMIC;
+
                 auto& tc = cube.Attach<TransformComponent>().Transform;
-                tc.Translate = glm::vec3(0.0f, 5.0f *i, -10.0f);
+                tc.Translate = glm::vec3(0.0f, 6.0f *i, -10.0f);
                 tc.Scale *= 5.0f; 
             }
         }

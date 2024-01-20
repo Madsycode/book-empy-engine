@@ -1,8 +1,17 @@
 #pragma once
+#include "Scripts/Utilities.h"
 #include "Physics/Utilities.h"
 
 namespace Empy
 {   
+    // skybox component
+    struct SkyboxComponent 
+    {
+        EMPY_INLINE SkyboxComponent(const SkyboxComponent&) = default;
+        EMPY_INLINE SkyboxComponent() = default; 
+        Skybox Sky;
+    };
+
     // direct light component
     struct DirectLightComponent 
     {
@@ -26,14 +35,6 @@ namespace Empy
         EMPY_INLINE SpotLightComponent() = default; 
         SpotLight Light;
     };
- 
-    // rigid body component
-    struct RigidBodyComponent 
-    {
-        EMPY_INLINE RigidBodyComponent(const RigidBodyComponent&) = default;
-        EMPY_INLINE RigidBodyComponent() = default; 
-        RigidBody3D RigidBody;
-    }; 
 
     // transform component
     struct TransformComponent 
@@ -43,36 +44,20 @@ namespace Empy
         Transform3D Transform;
     }; 
 
-    // collider component
-    struct ColliderComponent 
-    {
-        EMPY_INLINE ColliderComponent(const ColliderComponent&) = default;
-        EMPY_INLINE ColliderComponent() = default; 
-        Collider3D Collider;
-    }; 
-
-    // model animator
-    struct AnimatorComponent 
-    { 
-        EMPY_INLINE AnimatorComponent(const AnimatorComponent&) = default;
-        EMPY_INLINE AnimatorComponent() = default; 
-        Animator3D Animator;
-    };
-
     // camera component
     struct CameraComponent 
     {
         EMPY_INLINE CameraComponent(const CameraComponent&) = default;
         EMPY_INLINE CameraComponent() = default; 
         Camera3D Camera; 
-    };
+    }; 
 
-    // skybox component
-    struct SkyboxComponent 
-    {
-        EMPY_INLINE SkyboxComponent(const SkyboxComponent&) = default;
-        EMPY_INLINE SkyboxComponent() = default; 
-        Skybox Sky;
+    // common component
+    struct EnttComponent 
+    { 
+        EMPY_INLINE EnttComponent(const EnttComponent&) = default;
+        EMPY_INLINE EnttComponent() = default; 
+        std::string Name = "Untitled"; 
     };
 
     // model component
@@ -84,12 +69,45 @@ namespace Empy
         Model3D Model; 
     };
 
-    // common component
-    struct EnttComponent 
+    // rigid body component
+    struct RigidBodyComponent 
+    {
+        EMPY_INLINE RigidBodyComponent(const RigidBodyComponent&) = default;
+        EMPY_INLINE RigidBodyComponent() = default; 
+        RigidBody3D RigidBody;
+    }; 
+
+    // collider component
+    struct ColliderComponent 
+    {
+        EMPY_INLINE ColliderComponent(const ColliderComponent&) = default;
+        EMPY_INLINE ColliderComponent() = default; 
+        Collider3D Collider;
+    }; 
+
+    // script component
+    struct ScriptComponent 
+    {
+        EMPY_INLINE ScriptComponent(const ScriptComponent&) = default;
+        EMPY_INLINE ScriptComponent() = default; 
+        LuaScript Instance;
+    }; 
+
+    // model animator
+    struct AnimatorComponent 
     { 
-        EMPY_INLINE EnttComponent(const EnttComponent&) = default;
-        EMPY_INLINE EnttComponent() = default; 
-        std::string Name = "Untitled"; 
+        EMPY_INLINE AnimatorComponent(const AnimatorComponent&) = default;
+        EMPY_INLINE AnimatorComponent() = default; 
+        Animator3D Animator;
+    };
+
+    // mesh component
+    struct MeshComponent 
+    { 
+        EMPY_INLINE MeshComponent(const MeshComponent&) = default;
+        EMPY_INLINE MeshComponent() = default; 
+        PbrMaterial Material; 
+        Mesh3D Mesh; 
     };
 
     // base entity
