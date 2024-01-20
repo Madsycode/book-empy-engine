@@ -1,6 +1,5 @@
 #pragma once
 #include "Window/Window.h"
-#include "Auxiliaries/ECS.h"
 #include "Physics/Context.h"
 #include "Graphics/Renderer.h"
 

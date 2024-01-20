@@ -1,4 +1,5 @@
 #pragma once
+#include "Callback.h"
 #include "Utilities.h"
 
 namespace Empy
@@ -7,7 +8,7 @@ namespace Empy
     {
         EMPY_INLINE PhysicsContext() 
         {
-            // initialize physX SDK
+            // sinitialize physX SDK
             m_Foundation = PxCreateFoundation(PX_PHYSICS_VERSION, m_AllocatorCallback, m_ErrorCallback);
             if (!m_Foundation) 
             {
@@ -29,8 +30,9 @@ namespace Empy
 
             // create a scene desciption
             PxSceneDesc sceneDesc(m_Physics->getTolerancesScale());
-            sceneDesc.filterShader = PxDefaultSimulationFilterShader;
+            sceneDesc.simulationEventCallback = &m_EventCallback;
             sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
+            sceneDesc.filterShader = CustomFilterShader;
             sceneDesc.cpuDispatcher = m_Dispatcher;
 
             // create scene instance
@@ -41,7 +43,7 @@ namespace Empy
                 m_Physics->release();
                 m_Foundation->release();
                 return;
-            }         
+            }   
         }
 
         EMPY_INLINE ~PhysicsContext()
@@ -51,7 +53,84 @@ namespace Empy
             if (m_Dispatcher) { m_Dispatcher->release(); }
             if (m_Foundation) { m_Foundation->release(); }
         }
+             
+        EMPY_INLINE void AddRigidBody(Entity& entity)
+        {                   
+            auto& transform = entity.template Get<TransformComponent>().Transform;
+            auto& body = entity.template Get<RigidBodyComponent>().RigidBody;
+            bool hasCollider = entity.template Has<ColliderComponent>();
 
+            // create rigidbody transformation
+            PxTransform pose(ToPxVec3(transform.Translate)); 
+            glm::quat rot(transform.Rotation);
+            pose.q = PxQuat(rot.x, rot.y, rot.z, rot.w);
+
+            // create a rigid body actor
+            if(entity.template Has<ColliderComponent>())
+            {
+                // create collider shape
+
+                auto& collider = entity.template Get<ColliderComponent>().Collider;
+
+                // create collider material
+                collider.Material = m_Physics->createMaterial(collider.StaticFriction, 
+                    collider.DynamicFriction, collider.Restitution
+                );
+
+                if(collider.Type == Collider3D::BOX)
+                {
+                    PxBoxGeometry box(ToPxVec3(transform.Scale/2.0f));
+                    collider.Shape = m_Physics->createShape(box, *collider.Material);
+                }
+                else if(collider.Type == Collider3D::SPHERE)
+                {
+                    PxSphereGeometry sphere(transform.Scale.x/2.0f);
+                    collider.Shape = m_Physics->createShape(sphere, *collider.Material);
+                }            
+                else
+                {
+                    EMPY_ERROR("Error creating collider invalid type provided");
+                    return;
+                }
+
+                // create actor instanace
+
+                if(body.Type == RigidBody3D::DYNAMIC) 
+                {   
+                    body.Actor = PxCreateDynamic(*m_Physics, pose, *collider.Shape, body.Density);    
+                    body.Actor->setActorFlag(PxActorFlag::eSEND_SLEEP_NOTIFIES, true);
+                }
+                else if(body.Type == RigidBody3D::STATIC)
+                {
+                    body.Actor = PxCreateStatic(*m_Physics, pose, *collider.Shape);                    
+                }
+            }
+            else
+            {
+                if(body.Type == RigidBody3D::DYNAMIC) 
+                {   
+                    body.Actor = m_Physics->createRigidDynamic(pose);
+                }
+                else if(body.Type == RigidBody3D::STATIC)
+                {
+                    body.Actor = m_Physics->createRigidStatic(pose);
+                }
+            }
+
+            // check actor
+            if (!body.Actor) 
+            {
+                EMPY_ERROR("Error creating dynamic actor");               
+                return;
+            }
+
+            // set user data to entt id
+            body.Actor->userData = new EntityID(entity.ID()); 
+
+            // add actor to the m_Scene
+            m_Scene->addActor(*body.Actor);               
+        }
+        
         EMPY_INLINE void Simulate(uint32_t step, float dt)
         {
             for (int i = 0; i < step; ++i) 
@@ -62,100 +141,10 @@ namespace Empy
                 m_Scene->fetchResults(true); 
             }
         }
-                
-        EMPY_INLINE void AddActor(RigidBody3D& body, Transform3D& transform)
-        {            
-            // set friction and restitution 
 
-            // create rigidbody transformation
-            PxTransform pose(ToPxVec3(transform.Translate)); 
-            glm::quat rot(transform.Rotation);
-            pose.q = PxQuat(rot.x, rot.y, rot.z, rot.w);
-
-            // create a rigid body actor
-            if(body.Type == RigidBody3D::DYNAMIC) 
-            {   
-                body.Actor = m_Physics->createRigidDynamic(pose);
-            }
-            else if(body.Type == RigidBody3D::STATIC)
-            {
-                body.Actor = m_Physics->createRigidStatic(pose);
-            }
-            else 
-            {
-                EMPY_ERROR("Error creating rigidbody invalid type");
-                return;
-            }
-
-            // check actor
-            if (!body.Actor) 
-            {
-                EMPY_ERROR("Error creating dynamic actor");               
-                return;
-            }
-
-            // add actor to the m_Scene
-            m_Scene->addActor(*body.Actor);               
-        }
-
-        EMPY_INLINE void AddActor(RigidBody3D& body, Collider3D& collider, Transform3D& transform)
-        {            
-            // create rigidbody transformation
-            PxTransform pose(ToPxVec3(transform.Translate)); 
-            glm::quat rot(transform.Rotation);
-            pose.q = PxQuat(rot.x, rot.y, rot.z, rot.w);
-
-            // create collider shape
-            collider.Material = m_Physics->createMaterial(
-                collider.StaticFriction, 
-                collider.DynamicFriction, 
-                collider.Restitution
-            );
-          
-            if(collider.Type == Collider3D::BOX)
-            {
-                PxBoxGeometry box(ToPxVec3(transform.Scale/2.0f));
-                collider.Shape = m_Physics->createShape(box, *collider.Material);
-            }
-            else if(collider.Type == Collider3D::SPHERE)
-            {
-                PxSphereGeometry sphere(transform.Scale.x/2.0f);
-                collider.Shape = m_Physics->createShape(sphere, *collider.Material);
-            }   
-            else if(collider.Type == Collider3D::MESH)
-            {
-                collider.Shape = m_Physics->createShape(collider.Mesh, *collider.Material, true);
-            }            
-            else 
-            {
-                EMPY_ERROR("Error creating collider invalid type");
-                return;
-            }
-
-            // create a rigid body actor
-            if(body.Type == RigidBody3D::DYNAMIC) 
-            {             
-                body.Actor = PxCreateDynamic(*m_Physics, pose, *collider.Shape, body.Density);                           
-            }
-            else if(body.Type == RigidBody3D::STATIC)
-            {
-                body.Actor = PxCreateStatic(*m_Physics, pose, *collider.Shape);
-            }
-            else 
-            {
-                EMPY_ERROR("Error creating rigidbody invalid type");
-                return;
-            }
-
-            // check actor
-            if (!body.Actor) 
-            {
-                EMPY_ERROR("Error creating dynamic actor");               
-                return;
-            }
-
-            // add actor to the m_Scene
-            m_Scene->addActor(*body.Actor);               
+        EMPY_INLINE void SetEventCallback(PxCallbackFunction&& callback)
+        {
+            m_EventCallback.m_Callback = callback;
         }
 
         EMPY_INLINE PxConvexMeshGeometry CookMesh(const MeshData<ShadedVertex>& data) 
@@ -181,8 +170,7 @@ namespace Empy
             meshDesc.flags = PxConvexFlag::eCOMPUTE_CONVEX;
 
             // cooking the mesh
-            PxTolerancesScale default;
-            PxCookingParams cookingParams = PxCookingParams(default);    
+            PxCookingParams cookingParams = PxCookingParams(PxTolerancesScale());    
             PxCooking* cooking = PxCreateCooking(PX_PHYSICS_VERSION, *m_Foundation, cookingParams);
             PxConvexMeshCookingResult::Enum result;            
             PxConvexMesh* convexMesh = cooking->createConvexMesh(meshDesc, 
@@ -194,9 +182,26 @@ namespace Empy
         }
 
     private:
+        // custom collision filter shader callback
+        static PxFilterFlags CustomFilterShader
+        (
+            PxFilterObjectAttributes attributes0, PxFilterData filterData0,
+            PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+            PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize
+        )
+        {
+            // generate contacts and triggers for actors
+            pairFlags |= PxPairFlag::eCONTACT_DEFAULT | 
+            PxPairFlag::eTRIGGER_DEFAULT;
+
+            return PxFilterFlag::eDEFAULT;
+        }
+
+    private:
         PxDefaultErrorCallback m_ErrorCallback;
         PxDefaultAllocator m_AllocatorCallback;
         PxDefaultCpuDispatcher* m_Dispatcher;
+        PxEventCallback m_EventCallback;      
         PxFoundation* m_Foundation;
         PxPhysics* m_Physics;
         PxScene* m_Scene;

@@ -8,39 +8,33 @@ namespace Empy
         // creates application context
         EMPY_INLINE Application() 
         {
-            // intialize app context
+            m_LayerID = TypeID<Application>();                   
             m_Context = new AppContext();
-            m_LayerID = TypeID<Application>();
 
-            // attach window resize event callback
-            AttachCallback<WindowResizeEvent>([this] (auto e) 
-            {
-                m_Context->Renderer->Resize(e.Width, e.Height);
-            });
+            // register event callbacks
+            RegisterEventCallbacks();
+            // create scene entities
+            CreateSceneEntities();
+            // create physics actors
+            CreatePhysicsActors();
+            // create environm. maps
+            CreateSkyboxEnvMaps();
         }
 
         // destroy application context
         EMPY_INLINE ~Application() 
         {
+            // release physics actors
+            DestroyPhysicsActors();
             EMPY_DELETE(m_Context);
         }
 
         // runs application main loop
         EMPY_INLINE void RunContext()
-        {
-            // create scene entities
-            CreateSceneEntities();
-
-            // create physics actors
-            CreatePhysicsActors();
-
-            // create environm. maps
-            CreateSkyboxEnvMaps();
-
-
+        {          
             // application main loop
             while(m_Context->Window->PollEvents())
-            {
+            {   
                 // compute and update delta time value
                 ComputeFrameDeltaTime();
 
@@ -56,12 +50,25 @@ namespace Empy
                 // update all layers
                 UpdateAppLayers();
             }
-
-            // destroy physics actors
-            DestroyPhysicsActors();
         }
 
-    private:        
+    private:     
+        EMPY_INLINE void RegisterEventCallbacks()
+        {
+            // set physics event callback
+            m_Context->Physics->SetEventCallback([this] (auto e)
+            {
+                // coming later in scripting
+            });
+
+            // attach window resize event callback
+            AttachCallback<WindowResizeEvent>([this] (auto e) 
+            {
+                // resire renderer frame buffer
+                m_Context->Renderer->Resize(e.Width, e.Height);
+            });    
+        }
+
         // computes frame delta time value
         EMPY_INLINE void ComputeFrameDeltaTime()
         {
@@ -80,7 +87,7 @@ namespace Empy
             // start physics
             EnttView<Entity, RigidBodyComponent>([this] (auto entity, auto& comp) 
             { 
-                auto& transform = entity.Get<TransformComponent>().Transform;     
+                auto& transform = entity.template Get<TransformComponent>().Transform;     
                 auto& pose = comp.RigidBody.Actor->getGlobalPose();
                 glm::quat rot(pose.q.x, pose.q.y, pose.q.z, pose.q.w);
                 transform.Rotation = glm::degrees(glm::eulerAngles(rot));
@@ -99,6 +106,12 @@ namespace Empy
                     collider.Material->release();
                     collider.Shape->release();
                 }
+
+                // destroy actor user data                
+                EntityID* owner = static_cast<EntityID*>(comp.RigidBody.Actor->userData);
+                EMPY_DELETE(owner);
+
+                // destroy actor instance
                 comp.RigidBody.Actor->release();
             });
         }
@@ -141,25 +154,17 @@ namespace Empy
         // creates all actors and colliders
         EMPY_INLINE void CreatePhysicsActors()
         {
-            EnttView<Entity, RigidBodyComponent>([this] (auto entity, auto& comp) 
+            EnttView<Entity, RigidBodyComponent>([this] 
+            (auto entity, auto& comp) 
             { 
-                auto& transform = entity.template Get<TransformComponent>().Transform;     
-                if(entity.template Has<ColliderComponent>())
-                {
-                    auto& collider = entity.template Get<ColliderComponent>().Collider;     
-                    m_Context->Physics->AddActor(comp.RigidBody, collider, transform);
-                }
-                else
-                {
-                    m_Context->Physics->AddActor(comp.RigidBody, transform);
-                }
+                m_Context->Physics->AddRigidBody(entity);               
             });
         }
 
         // creates entities with components
         EMPY_INLINE void CreateSceneEntities()
         {
-             // load models
+            // load models
             auto walking = std::make_shared<SkeletalModel>("Resources/Models/Walking.fbx");
             auto sphereModel = std::make_shared<StaticModel>("Resources/Models/sphere.fbx");
             auto cubeModel = std::make_shared<StaticModel>("Resources/Models/cube.fbx");
@@ -169,24 +174,24 @@ namespace Empy
             camera.Attach<TransformComponent>().Transform.Translate.z = 20.0f;
             camera.Attach<CameraComponent>();
 
+            // create skybox entity
+            auto skybox = CreateEntt<Entity>();                    
+            skybox.Attach<TransformComponent>();
+            skybox.Attach<SkyboxComponent>();
+
             // create directional light
             auto light = CreateEntt<Entity>();                    
             light.Attach<DirectLightComponent>().Light.Intensity = 1.0f;
             auto& td = light.Attach<TransformComponent>().Transform;
             td.Rotation = glm::vec3(0.0f, 1.0f, -1.0f);
 
-            // create skybox entity
-            auto skybox = CreateEntt<Entity>();                    
-            skybox.Attach<TransformComponent>();
-            skybox.Attach<SkyboxComponent>();
-
             // create robot entity
             auto robot = CreateEntt<Entity>();
             robot.Attach<ModelComponent>().Model = walking;
-            auto& tr = robot.Attach<TransformComponent>().Transform;
-            tr.Translate = glm::vec3(0.0f, -10.0f, -10.0f);
-            tr.Scale = glm::vec3(0.1f);
             robot.Attach<AnimatorComponent>().Animator = walking->GetAnimator();
+            auto& tr = robot.Attach<TransformComponent>().Transform;
+            tr.Translate = glm::vec3(0.0f, -14.99f, -15.0f);
+            tr.Scale = glm::vec3(0.1f);
 
             // create plane entity (ground)
             auto plane = CreateEntt<Entity>();
@@ -194,36 +199,31 @@ namespace Empy
             plane.Attach<ColliderComponent>().Collider.Type = Collider3D::BOX;
             plane.Attach<ModelComponent>().Model = cubeModel;
             auto& tp = plane.Attach<TransformComponent>().Transform;
+            tp.Translate = glm::vec3(0.0f, -15.0f, -50.0f);
             tp.Scale = glm::vec3(100.0f, 1.0f, 100.0f);
-            tp.Translate.z = -50.0f;
-            tp.Translate.y = -15.0f;
 
-            // create sphere rigid bodies
+            // create robot entity
             for(uint32_t i = 0; i < 100; i++)
             {
-                Entity sphere = CreateEntt<Entity>();
-                sphere.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::DYNAMIC;
-                sphere.Attach<ColliderComponent>().Collider.Type = Collider3D::SPHERE;
+                auto sphere = CreateEntt<Entity>();
                 sphere.Attach<ModelComponent>().Model = sphereModel;
-                auto& ts = sphere.Attach<TransformComponent>();
-                ts.Transform.Translate.y = i*10.0f;
-                ts.Transform.Translate.z = -10.0f;
-                ts.Transform.Translate.x = 3.0f;
-                ts.Transform.Scale *= 5.0f;
+                sphere.Attach<ColliderComponent>().Collider.Type = Collider3D::SPHERE;
+                sphere.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::DYNAMIC;
+                auto& tc = sphere.Attach<TransformComponent>().Transform;
+                tc.Translate = glm::vec3(0.0f, 5.0f * i, -10.0f);
+                tc.Scale *= 5.0f; 
             }
 
-            // create cube rigid bodies
+            // create robot entity
             for(uint32_t i = 0; i < 100; i++)
             {
-                Entity cube = CreateEntt<Entity>();
-                cube.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::DYNAMIC;
-                cube.Attach<ColliderComponent>().Collider.Type = Collider3D::BOX;
+                auto cube = CreateEntt<Entity>();
                 cube.Attach<ModelComponent>().Model = cubeModel;
-                auto& tc = cube.Attach<TransformComponent>();
-                tc.Transform.Translate.y = i*10.0f;
-                tc.Transform.Translate.z = -15.0f;
-                tc.Transform.Rotation.x = i*10.0f;
-                tc.Transform.Scale *= 5.0f;
+                cube.Attach<ColliderComponent>().Collider.Type = Collider3D::BOX;
+                cube.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::DYNAMIC;
+                auto& tc = cube.Attach<TransformComponent>().Transform;
+                tc.Translate = glm::vec3(0.0f, 5.0f *i, -10.0f);
+                tc.Scale *= 5.0f; 
             }
         }
                

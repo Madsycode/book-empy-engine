@@ -1,24 +1,8 @@
 #pragma once
-#include <entt/entt.hpp>
 #include "Physics/Utilities.h"
 
 namespace Empy
-{
-    // typedefs
-    using EntityID = entt::entity;
-    using EntityRegistry = entt::registry;
-    constexpr EntityID NENTT = entt::null;
-
-    // ++
-    
-    // skybox component
-    struct SkyboxComponent 
-    {
-        EMPY_INLINE SkyboxComponent(const SkyboxComponent&) = default;
-        EMPY_INLINE SkyboxComponent() = default; 
-        Skybox Sky;
-    };
-
+{   
     // direct light component
     struct DirectLightComponent 
     {
@@ -42,6 +26,14 @@ namespace Empy
         EMPY_INLINE SpotLightComponent() = default; 
         SpotLight Light;
     };
+ 
+    // rigid body component
+    struct RigidBodyComponent 
+    {
+        EMPY_INLINE RigidBodyComponent(const RigidBodyComponent&) = default;
+        EMPY_INLINE RigidBodyComponent() = default; 
+        RigidBody3D RigidBody;
+    }; 
 
     // transform component
     struct TransformComponent 
@@ -49,39 +41,6 @@ namespace Empy
         EMPY_INLINE TransformComponent(const TransformComponent&) = default;
         EMPY_INLINE TransformComponent() = default; 
         Transform3D Transform;
-    }; 
-
-    // camera component
-    struct CameraComponent 
-    {
-        EMPY_INLINE CameraComponent(const CameraComponent&) = default;
-        EMPY_INLINE CameraComponent() = default; 
-        Camera3D Camera; 
-    }; 
-
-    // common component
-    struct EnttComponent 
-    { 
-        EMPY_INLINE EnttComponent(const EnttComponent&) = default;
-        EMPY_INLINE EnttComponent() = default; 
-        std::string Name = "Untitled"; 
-    };
-
-    // model component
-    struct ModelComponent 
-    { 
-        EMPY_INLINE ModelComponent(const ModelComponent&) = default;
-        EMPY_INLINE ModelComponent() = default; 
-        PbrMaterial Material; 
-        Model3D Model; 
-    };
-
-    // rigid body component
-    struct RigidBodyComponent 
-    {
-        EMPY_INLINE RigidBodyComponent(const RigidBodyComponent&) = default;
-        EMPY_INLINE RigidBodyComponent() = default; 
-        RigidBody3D RigidBody;
     }; 
 
     // collider component
@@ -100,16 +59,38 @@ namespace Empy
         Animator3D Animator;
     };
 
-    // mesh component
-    struct MeshComponent 
-    { 
-        EMPY_INLINE MeshComponent(const MeshComponent&) = default;
-        EMPY_INLINE MeshComponent() = default; 
-        PbrMaterial Material; 
-        Mesh3D Mesh; 
+    // camera component
+    struct CameraComponent 
+    {
+        EMPY_INLINE CameraComponent(const CameraComponent&) = default;
+        EMPY_INLINE CameraComponent() = default; 
+        Camera3D Camera; 
     };
-    
-    // ++
+
+    // skybox component
+    struct SkyboxComponent 
+    {
+        EMPY_INLINE SkyboxComponent(const SkyboxComponent&) = default;
+        EMPY_INLINE SkyboxComponent() = default; 
+        Skybox Sky;
+    };
+
+    // model component
+    struct ModelComponent 
+    { 
+        EMPY_INLINE ModelComponent(const ModelComponent&) = default;
+        EMPY_INLINE ModelComponent() = default; 
+        PbrMaterial Material; 
+        Model3D Model; 
+    };
+
+    // common component
+    struct EnttComponent 
+    { 
+        EMPY_INLINE EnttComponent(const EnttComponent&) = default;
+        EMPY_INLINE EnttComponent() = default; 
+        std::string Name = "Untitled"; 
+    };
 
     // base entity
     struct Entity 
@@ -127,7 +108,7 @@ namespace Empy
         EMPY_INLINE virtual ~Entity() = default;
         EMPY_INLINE Entity() = default;		
 
-        EMPY_INLINE operator EntityID ()  
+        EMPY_INLINE operator EntityID () 
         { 
             return m_EnttID; 
         }

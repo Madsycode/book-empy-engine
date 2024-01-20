@@ -15,5 +15,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Engine
 )
 
+# add the /bigobj flag for Visual Studio builds
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE "/bigobj")
+endif()
 
 

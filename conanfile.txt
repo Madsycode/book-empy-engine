@@ -8,6 +8,8 @@ entt/3.12.2
 physx/4.1.1
 glfw/3.3.8
 glew/2.2.0
+sol2/3.3.1
+lua/5.4.6
 
 [generators]
 cmake

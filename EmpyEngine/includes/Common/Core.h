@@ -16,6 +16,9 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 
+// include entt
+#include <entt/entt.hpp>
+
 // include glm
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -70,6 +73,13 @@
 // core features
 namespace Empy
 {
+    // entity identifier
+    using EntityID = entt::entity;
+    // null entity
+    constexpr EntityID NENTT = entt::null;  
+    // entity registry
+    using EntityRegistry = entt::registry;
+
     // runtime type
     template <typename T>
     EMPY_INLINE constexpr uint32_t TypeID()

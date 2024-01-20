@@ -31,7 +31,7 @@ namespace Empy
 
         // collider material data
         float DynamicFriction = 0.5f;
-        float StaticFriction = 0.4f;
+        float StaticFriction = 0.0f;
         float Restitution = 0.1f;
 
         // mesh for custom shape
