@@ -1,4 +1,4 @@
--- empy core script class
+-- core script class
 local EmpyScript = {}
 local EmpyScript_mt = { __index = EmpyScript }
 
@@ -28,7 +28,7 @@ function Initializer()
         return self
     end
     
-    -- apply rigidbody foce
+    -- apply force to rigidbody
     function ScriptKlass:ApplyForce(force)
         ApiApplyForce(self.Entity, force)
     end
@@ -38,7 +38,7 @@ function Initializer()
         ApiDestroy(self.Entity)
     end
 
-     -- destroy self
+     -- get data
     function ScriptKlass:Get(type)
         if type == TRANSFORM then
             return ApiGetTransform(self.Entity)

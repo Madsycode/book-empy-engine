@@ -51,7 +51,7 @@ else()
     message(WARNING "[WARNING] no resource directory!")
 endif()
 
-# copy script direcotory
+# copy script directory
 if(EXISTS ${CMAKE_SOURCE_DIR}/EmpyScript)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND 
         ${CMAKE_COMMAND} -E copy_directory 

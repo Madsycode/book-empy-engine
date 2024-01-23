@@ -11,7 +11,7 @@ function EmpyInput.IsKey(key)
     return ApiKeyDown(key)
 end
 
--- mouse input codes 
+-- mouse input codes  
 EmpyInput.MOUSE_LEFT     = 0
 EmpyInput.MOUSE_MIDDLE   = 1
 EmpyInput.MOUSE_RIGHT    = 2

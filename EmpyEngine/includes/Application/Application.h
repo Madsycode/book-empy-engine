@@ -135,7 +135,7 @@ namespace Empy
             });
         }
 
-        // call script instances update funcs 
+        // calls script instances on-update 
         EMPY_INLINE void UpdateScriptInstances()
         {
             EnttView<Entity, ScriptComponent>([this] 
@@ -148,7 +148,7 @@ namespace Empy
             });
         }
 
-        // call script instances start funcs 
+        // calls script instances on-start
         EMPY_INLINE void StartScriptInstances()
         {
             EnttView<Entity, ScriptComponent>([this] 
@@ -256,7 +256,7 @@ namespace Empy
         // creates entities with components
         EMPY_INLINE void CreateSceneEntities()
         {
-             // load models
+            // load models
             auto walking = std::make_shared<SkeletalModel>("Resources/Models/Walking.fbx");
             auto sphereModel = std::make_shared<StaticModel>("Resources/Models/sphere.fbx");
             auto cubeModel = std::make_shared<StaticModel>("Resources/Models/cube.fbx");

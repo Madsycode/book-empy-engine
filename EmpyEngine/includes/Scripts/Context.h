@@ -96,18 +96,21 @@ namespace Empy
         // registers functions to interact with entity
         EMPY_INLINE void SetApiFunctions(EntityRegistry* scene, AppWindow* window)
         {
+            // api function to get entity transform
             m_Lua.set_function("ApiGetTransform", [this, scene] 
             (EntityID entity)
             {
                 return std::ref(scene->get<TransformComponent>(entity).Transform);
             });
 
+            // api function to check if mouse down
             m_Lua.set_function("ApiMouseDown", [this, window] 
             (int32_t button)
             {
                 return window->IsMouse(button);
             });
 
+            // api function to apply force on actor
             m_Lua.set_function("ApiApplyForce", [this, scene] 
             (EntityID entity, const glm::vec3& force)
             {
@@ -129,20 +132,14 @@ namespace Empy
                 return false;
             });
 
-            m_Lua.set_function("ApiTranslate", [this, scene] 
-            (EntityID entity, const glm::vec3& translate)
-            {
-                if(!scene->valid(entity)) { return; }
-                scene->get<TransformComponent>(entity).
-                Transform.Translate += translate;
-            });            
-
+            // api function to check if key pressed
             m_Lua.set_function("ApiKeyDown", [this, window] 
             (int32_t key)
             {
                 return window->IsKey(key);
             });
 
+            // api function to destroy entity
             m_Lua.set_function("ApiDestroy", [this, scene] 
             (EntityID entity)
             {
@@ -178,8 +175,6 @@ namespace Empy
                 // destroy entity from scene
                 scene->destroy(entity);
             });
-
-            EMPY_ASSERT(scene && "invalid scene target!");
         }
 
     private:

@@ -1,4 +1,3 @@
-
 -- call once to init script
 function TestScript.OnStart(self)
     self.Transform = self:Get(TRANSFORM)
@@ -17,7 +16,7 @@ function TestScript.OnUpdate(self, dt)
         self:ApplyForce(Vec3.new(100.0, 0.0, 0.0));
     end
 
-    -- rotate every frame
+    -- scale object every frame
     self.Transform.Scale.y = self.Transform.Scale.y + dt;
 end 
 
@@ -46,3 +45,4 @@ end
 function TestScript.OnDestroy(self)
     print("destroyed:", self.Entity)
 end
+
