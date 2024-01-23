@@ -7,69 +7,69 @@ namespace Empy
     {
         // script handle constructor
         EMPY_INLINE Script(sol::table handle, const std::string& name): 
-            m_Instance(handle), m_Name(name) 
+            m_Handle(handle), m_Name(name) 
         {}
 
         // callback for window resize event
         EMPY_INLINE void OnResize(int32_t width, int32_t height) 
         { 
-            if(m_Instance.valid())
+            if(m_Handle.valid())
             {
-                m_Instance["OnResize"](m_Instance, width, height);
+                m_Handle["OnResize"](m_Handle, width, height);
             } 
         }  
         
         // callback for mouse down event
         EMPY_INLINE void OnMouseDown(int32_t button) 
         { 
-            if(m_Instance.valid())
+            if(m_Handle.valid())
             {
-                m_Instance["OnMouseDown"](m_Instance, button); 
+                m_Handle["OnMouseDown"](m_Handle, button); 
             }
         }
 
         // callback for rigidbody collision 
         EMPY_INLINE void OnCollision(EntityID other) 
         { 
-            if(m_Instance.valid())
+            if(m_Handle.valid())
             {
-                m_Instance["OnCollision"](m_Instance, other);
+                m_Handle["OnCollision"](m_Handle, other);
             } 
         }
 
         // callback for key down event
         EMPY_INLINE void OnKeyDown(int32_t key) 
         { 
-            if(m_Instance.valid())
+            if(m_Handle.valid())
             {
-                m_Instance["OnKeyDown"](m_Instance, key); 
+                m_Handle["OnKeyDown"](m_Handle, key); 
             } 
         }
 
         // callback to update script 
         EMPY_INLINE void OnUpdate(float dt) 
         { 
-            if(m_Instance.valid())
+            if(m_Handle.valid())
             {
-                m_Instance["OnUpdate"](m_Instance, dt);
+                m_Handle["OnUpdate"](m_Handle, dt);
             } 
         }
 
         // callback to destroy entity 
         EMPY_INLINE void OnDestroy() 
         { 
-            if(m_Instance.valid())
+            if(m_Handle.valid())
             {
-                m_Instance["OnDestroy"](m_Instance); 
+                m_Handle["OnDestroy"](m_Handle); 
             }
         }
 
         // callback sto tart script 
         EMPY_INLINE void OnStart() 
         { 
-            if(m_Instance.valid())
+            if(m_Handle.valid())
             {
-                m_Instance["OnStart"](m_Instance); 
+                m_Handle["OnStart"](m_Handle); 
             }
         }
 
@@ -82,12 +82,12 @@ namespace Empy
         // checks if valid
         EMPY_INLINE bool Valid() 
         { 
-            return m_Instance.valid(); 
+            return m_Handle.valid(); 
         }
 
     private:
         friend struct ScriptContext;
-        sol::table m_Instance;
+        sol::table m_Handle;
         std::string m_Name;
     };
 

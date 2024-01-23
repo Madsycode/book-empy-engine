@@ -19,11 +19,6 @@ namespace Empy
         PxEvent Event = PxEvent::UNKNOWN;
     };
 
-    struct ActorData
-    { 
-        EntityID Entt = NENTT;
-    };
-
     using PxCallbackFunction = std::function<void(const PxPayload&)>;
 
     struct PxEventCallback : public PxSimulationEventCallback 

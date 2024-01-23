@@ -1,6 +1,7 @@
 #pragma once
 #include "Scripts/Utilities.h"
 #include "Physics/Utilities.h"
+#include "Graphics/Utilities/Data.h"
 
 namespace Empy
 {   

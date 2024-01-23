@@ -68,7 +68,7 @@ namespace Empy
         // loads script into lua state
         EMPY_INLINE std::string LoadScript(const std::string& filepath)
         {
-            auto& Initializer = m_Lua["Initializer"];
+            auto Initializer = m_Lua["Initializer"];
 
             // check if modules are loaded
             if(!Initializer.valid()) 

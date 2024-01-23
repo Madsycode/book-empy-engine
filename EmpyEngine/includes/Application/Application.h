@@ -180,7 +180,7 @@ namespace Empy
             EnttView<Entity, RigidBodyComponent>([this] (auto entity, auto& comp) 
             { 
                 auto& transform = entity.template Get<TransformComponent>().Transform;     
-                auto& pose = comp.RigidBody.Actor->getGlobalPose();
+                auto pose = comp.RigidBody.Actor->getGlobalPose();
                 glm::quat rot(pose.q.x, pose.q.y, pose.q.z, pose.q.w);
                 transform.Rotation = glm::degrees(glm::eulerAngles(rot));
                 transform.Translate = PxToVec3(pose.p);
@@ -391,7 +391,6 @@ namespace Empy
             {
                 layer->OnUpdate();
             }    
-
             // show scene to screen
             m_Context->Renderer->ShowFrame();
         }               
