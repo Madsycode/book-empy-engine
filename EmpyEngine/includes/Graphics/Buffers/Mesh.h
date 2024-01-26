@@ -5,7 +5,7 @@ namespace Empy
 {
 	template <typename Vertex> struct Mesh
 	{
-		EMPY_INLINE Mesh(const MeshData<Vertex>& data) 
+		EMPY_INLINE Mesh(MeshData<Vertex>& data) 
 		{
 			// check vertices
 			if(data.Vertices.empty())
@@ -59,12 +59,7 @@ namespace Empy
 				SetAttribute(4, 3, (void*)offsetof(SkeletalVertex, Bitangent));
 				SetAttribute(5, 4, (void*)offsetof(SkeletalVertex, Joints));
 				SetAttribute(6, 4, (void*)offsetof(SkeletalVertex, Weights));
-			}
-			else if (TypeID<Vertex>() == TypeID<FlatVertex>()) 
-			{
-				SetAttribute(0, 3, (void*)offsetof(FlatVertex, Position));
-				SetAttribute(1, 4, (void*)offsetof(FlatVertex, Color));
-			}
+			}			
 			else if (TypeID<Vertex>() == TypeID<QuadVertex>()) 
 			{
 				SetAttribute(0, 4, (void*)offsetof(QuadVertex, Data));
@@ -114,7 +109,6 @@ namespace Empy
 	};
 
 	// 3d mesh
-    using ShadedMesh = Mesh<ShadedVertex>;
     using SkeletalMesh = Mesh<SkeletalVertex>;
-	using Mesh3D = std::shared_ptr<ShadedMesh>;
+    using ShadedMesh = Mesh<ShadedVertex>;
 }

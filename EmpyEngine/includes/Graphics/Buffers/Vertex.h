@@ -7,14 +7,7 @@ namespace Empy
 	struct QuadVertex 
 	{
 		float Data[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-	};
-
-	// flat vertex
-	struct FlatVertex 
-	{
-		glm::vec3 Position = glm::vec3(0.0f);
-		glm::vec4 Color = glm::vec4(0.0f);
-	};   
+	}; 
 
 	// flat vertex
 	struct SkyboxVertex 
@@ -48,7 +41,6 @@ namespace Empy
 		glm::ivec4 Joints = glm::ivec4(-1);
 		glm::vec4 Weights = glm::vec4(0.0f);
 	};
-
 
 	// mesh data
 	template <typename Vertex> 

@@ -1,18 +1,8 @@
 #pragma once
-#include "Scripts/Utilities.h"
-#include "Physics/Utilities.h"
-#include "Graphics/Utilities/Data.h"
+#include "Assets.h"
 
 namespace Empy
 {   
-    // skybox component
-    struct SkyboxComponent 
-    {
-        EMPY_INLINE SkyboxComponent(const SkyboxComponent&) = default;
-        EMPY_INLINE SkyboxComponent() = default; 
-        Skybox Sky;
-    };
-
     // direct light component
     struct DirectLightComponent 
     {
@@ -44,32 +34,7 @@ namespace Empy
         EMPY_INLINE TransformComponent() = default; 
         Transform3D Transform;
     }; 
-
-    // camera component
-    struct CameraComponent 
-    {
-        EMPY_INLINE CameraComponent(const CameraComponent&) = default;
-        EMPY_INLINE CameraComponent() = default; 
-        Camera3D Camera; 
-    }; 
-
-    // common component
-    struct EnttComponent 
-    { 
-        EMPY_INLINE EnttComponent(const EnttComponent&) = default;
-        EMPY_INLINE EnttComponent() = default; 
-        std::string Name = "Untitled"; 
-    };
-
-    // model component
-    struct ModelComponent 
-    { 
-        EMPY_INLINE ModelComponent(const ModelComponent&) = default;
-        EMPY_INLINE ModelComponent() = default; 
-        PbrMaterial Material; 
-        Model3D Model; 
-    };
-
+    
     // rigid body component
     struct RigidBodyComponent 
     {
@@ -86,29 +51,48 @@ namespace Empy
         Collider3D Collider;
     }; 
 
+    // camera component
+    struct CameraComponent 
+    {
+        EMPY_INLINE CameraComponent(const CameraComponent&) = default;
+        EMPY_INLINE CameraComponent() = default; 
+        Camera3D Camera; 
+    }; 
+
+    // skybox component
+    struct SkyboxComponent 
+    {
+        EMPY_INLINE SkyboxComponent(const SkyboxComponent&) = default;
+        EMPY_INLINE SkyboxComponent() = default; 
+        AssetID Skybox = EMPTY_ASSET;
+    };    
+
     // script component
     struct ScriptComponent 
     {
         EMPY_INLINE ScriptComponent(const ScriptComponent&) = default;
         EMPY_INLINE ScriptComponent() = default; 
+        AssetID Script = EMPTY_ASSET;
         LuaScript Instance;
     }; 
 
-    // model animator
-    struct AnimatorComponent 
+    // model component
+    struct ModelComponent 
     { 
-        EMPY_INLINE AnimatorComponent(const AnimatorComponent&) = default;
-        EMPY_INLINE AnimatorComponent() = default; 
-        Animator3D Animator;
+        EMPY_INLINE ModelComponent(const ModelComponent&) = default;
+        EMPY_INLINE ModelComponent() = default; 
+        AssetID Material = EMPTY_ASSET; 
+        AssetID Model = EMPTY_ASSET; 
     };
 
-    // mesh component
-    struct MeshComponent 
+    // common component
+    struct InfoComponent 
     { 
-        EMPY_INLINE MeshComponent(const MeshComponent&) = default;
-        EMPY_INLINE MeshComponent() = default; 
-        PbrMaterial Material; 
-        Mesh3D Mesh; 
+        EMPY_INLINE InfoComponent(const InfoComponent&) = default;
+        EMPY_INLINE InfoComponent() = default; 
+        AssetID Parent = EMPTY_ASSET;
+        std::string Name = "Entity"; 
+        AssetID UID = RandomU64();
     };
 
     // base entity

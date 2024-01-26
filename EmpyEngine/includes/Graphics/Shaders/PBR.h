@@ -7,26 +7,6 @@ namespace Empy
     {        
         EMPY_INLINE PbrShader(const std::string& filename): Shader(filename) 
         {
-            u_UseRoughnessMap = glGetUniformLocation(m_ShaderID, "u_material.UseRoughnessMap");
-            u_UseOcclusionMap = glGetUniformLocation(m_ShaderID, "u_material.UseOcclusionMap");
-            u_UseEmissiveMap = glGetUniformLocation(m_ShaderID, "u_material.UseEmissiveMap");
-            u_UseMetallicMap = glGetUniformLocation(m_ShaderID, "u_material.UseMetallicMap");
-            u_UseAlbedoMap = glGetUniformLocation(m_ShaderID, "u_material.UseAlbedoMap");
-            u_UseNormalMap = glGetUniformLocation(m_ShaderID, "u_material.UseNormalMap");
-
-            u_RoughnessMap = glGetUniformLocation(m_ShaderID, "u_material.RoughnessMap");
-            u_OcclusionMap = glGetUniformLocation(m_ShaderID, "u_material.OcclusionMap");
-            u_EmissiveMap = glGetUniformLocation(m_ShaderID, "u_material.EmissiveMap");
-            u_MetallicMap = glGetUniformLocation(m_ShaderID, "u_material.MetallicMap");
-            u_AlbedoMap = glGetUniformLocation(m_ShaderID, "u_material.AlbedoMap");
-            u_NormalMap = glGetUniformLocation(m_ShaderID, "u_material.NormalMap");
-
-            u_Roughness = glGetUniformLocation(m_ShaderID, "u_material.Roughness");
-            u_Occlusion = glGetUniformLocation(m_ShaderID, "u_material.Occlusion");
-            u_Emissive = glGetUniformLocation(m_ShaderID, "u_material.Emissive");
-            u_Metallic = glGetUniformLocation(m_ShaderID, "u_material.Metallic");
-            u_Albedo = glGetUniformLocation(m_ShaderID, "u_material.Albedo");
-
             u_NbrDirectLight = glGetUniformLocation(m_ShaderID, "u_nbrDirectLight");
             u_NbrPointLight = glGetUniformLocation(m_ShaderID, "u_nbrPointLight");
             u_NbrSpotLight = glGetUniformLocation(m_ShaderID, "u_nbrSpotLight");
@@ -38,18 +18,20 @@ namespace Empy
             u_LightSpace = glGetUniformLocation(m_ShaderID, "u_lightSpace");
             u_DepthMap = glGetUniformLocation(m_ShaderID, "u_depthMap");
 
+            u_HasJoints = glGetUniformLocation(m_ShaderID, "u_hasJoints");
+
             u_ViewPos = glGetUniformLocation(m_ShaderID, "u_viewPos");
             u_Model = glGetUniformLocation(m_ShaderID, "u_model");
             u_View = glGetUniformLocation(m_ShaderID, "u_view");
             u_Proj = glGetUniformLocation(m_ShaderID, "u_proj");
             
-            u_HasJoints = glGetUniformLocation(m_ShaderID, "u_hasJoints");
+            u_Material.Initialize(m_ShaderID);
         } 
 
         EMPY_INLINE void SetEnvMaps(uint32_t irrad, uint32_t prefil, uint32_t brdf, uint32_t depthMap)
         {
             glUseProgram(m_ShaderID);
-
+            
             // irradiance map
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_CUBE_MAP, irrad);
@@ -126,51 +108,25 @@ namespace Empy
             glUniform1f(u_intensity, light.Intensity);
         }
 
-        EMPY_INLINE void Draw(Model3D& model, PbrMaterial& material, Transform3D& transform)
+        
+        EMPY_INLINE void SetJoints(std::vector<glm::mat4>& joints) 
         {
-            glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));   
-            glUniform1i(u_HasJoints, model->HasJoint()); 
+            for (size_t i = 0; i < joints.size() && i < 100; ++i) 
+            {
+                std::string uniform = "u_joints[" + std::to_string(i) + "]";
+                uint32_t u_joint = glGetUniformLocation(m_ShaderID, uniform.c_str());
+                glUniformMatrix4fv(u_joint, 1, GL_FALSE, glm::value_ptr(joints[i]));
+            }
+        }
 
-            glUniform3fv(u_Emissive, 1, &material.Emissive.x);
-            glUniform3fv(u_Albedo, 1, &material.Albedo.x);
-            glUniform1f(u_Roughness, material.Roughness);
-            glUniform1f(u_Occlusion, material.Occlusion);
-            glUniform1f(u_Metallic, material.Metallic);
-
-            int32_t unit = 4; // <-- starts at unit 4
-            bool useMap = false;
-
-            // albedo map
-            useMap = material.AlbedoMap != nullptr;
-            glUniform1i(u_UseAlbedoMap, useMap);
-            if(useMap) { material.AlbedoMap->Use(u_AlbedoMap, unit++); }
-            
-            // normal map
-            useMap = material.NormalMap != nullptr;
-            glUniform1i(u_UseNormalMap, useMap);
-            if(useMap) { material.NormalMap->Use(u_NormalMap, unit++); }
-           
-            // mettalic map
-            useMap = material.MetallicMap != nullptr;
-            glUniform1i(u_UseMetallicMap, useMap);
-            if(useMap) { material.MetallicMap->Use(u_MetallicMap, unit++); }
-          
-            // roughness map
-            useMap = material.RoughnessMap != nullptr;
-            glUniform1i(u_UseRoughnessMap, useMap);
-            if(useMap) { material.RoughnessMap->Use(u_RoughnessMap, unit++); }
-
-            // emissive map
-            useMap = material.EmissiveMap != nullptr;
-            glUniform1i(u_UseEmissiveMap, useMap);
-            if(useMap) { material.EmissiveMap->Use(u_EmissiveMap, unit++); }
-
-            // occlusion map
-            useMap = material.OcclusionMap != nullptr;
-            glUniform1i(u_UseOcclusionMap, useMap);
-            if(useMap) { material.OcclusionMap->Use(u_OcclusionMap, unit++); }
-
-            // render model
+        EMPY_INLINE void Draw(Model3D& model, Material& mtl, Transform3D& transform)
+        {
+            // set transform
+            glUniformMatrix4fv(u_Model, 1, GL_FALSE, glm::value_ptr(transform.Matrix()));  
+            glUniform1i(u_HasJoints, model->HasJoints()); 
+            // set mtl
+            SetMaterial(mtl, 4);
+            // render mesh
             model->Draw(GL_TRIANGLES);        
         }
 
@@ -185,16 +141,6 @@ namespace Empy
         {
             // set view projection matrix
             glUniformMatrix4fv(u_LightSpace, 1, GL_FALSE, glm::value_ptr(lightSpaceMtx));  
-        }
-       
-        EMPY_INLINE void SetJoints(std::vector<glm::mat4>& transforms) 
-        {
-            for (size_t i = 0; i < transforms.size() && i < 100; ++i) 
-            {
-                std::string uniform = "u_joints[" + std::to_string(i) + "]";
-                uint32_t u_joint = glGetUniformLocation(m_ShaderID, uniform.c_str());
-                glUniformMatrix4fv(u_joint, 1, GL_FALSE, glm::value_ptr(transforms[i]));
-            }
         }
 
         EMPY_INLINE void SetDirectLightCount(int32_t count)
@@ -212,6 +158,40 @@ namespace Empy
             glUniform1i(u_NbrSpotLight, count);
         }
 
+private:
+        EMPY_INLINE void UseMap(uint32_t map, uint32_t uniform, int32_t unit) 
+        { 
+            glActiveTexture(GL_TEXTURE0 + unit);
+            glBindTexture(GL_TEXTURE_2D, map);
+            glUniform1i(uniform, unit); 
+        }
+
+        EMPY_INLINE void SetMaterial(Material& mtl, int32_t unit) 
+		{
+			// set usability
+			glUniform1i(u_Material.UseRoughnessMap, mtl.RoughnessMap);
+			glUniform1i(u_Material.UseOcclusionMap, mtl.OcclusionMap);
+			glUniform1i(u_Material.UseEmissiveMap, mtl.EmissiveMap);
+			glUniform1i(u_Material.UseMetallicMap, mtl.MetallicMap);
+			glUniform1i(u_Material.UseAlbedoMap, mtl.AlbedoMap);
+			glUniform1i(u_Material.UseNormalMap, mtl.NormalMap);
+
+			// set mtl maps
+            UseMap(mtl.RoughnessMap, u_Material.RoughnessMap, unit++);
+            UseMap(mtl.OcclusionMap, u_Material.OcclusionMap, unit++);
+            UseMap(mtl.EmissiveMap, u_Material.EmissiveMap, unit++);
+            UseMap(mtl.MetallicMap, u_Material.MetallicMap, unit++);
+            UseMap(mtl.AlbedoMap, u_Material.AlbedoMap, unit++);
+            UseMap(mtl.NormalMap, u_Material.NormalMap, unit++);
+
+			// set properties
+			glUniform3fv(u_Material.Emissive, 1, &mtl.Emissive.x);
+            glUniform3fv(u_Material.Albedo, 1, &mtl.Albedo.x);
+            glUniform1f(u_Material.Roughness, mtl.Roughness);
+            glUniform1f(u_Material.Occlusion, mtl.Occlusion);
+            glUniform1f(u_Material.Metallic, mtl.Metallic);
+		}
+        
     private:     
         uint32_t u_HasJoints = 0u;
 
@@ -219,33 +199,14 @@ namespace Empy
         uint32_t u_NbrDirectLight = 0u;
         uint32_t u_NbrPointLight = 0u;
         uint32_t u_NbrSpotLight = 0u;        
+        uint32_t u_LightSpace = 0u;
         // --
-        uint32_t u_UseRoughnessMap = 0u;
-        uint32_t u_UseOcclusionMap = 0u;
-        uint32_t u_UseEmissiveMap = 0u;
-        uint32_t u_UseMetallicMap = 0u;
-        uint32_t u_UseAlbedoMap = 0u;
-        uint32_t u_UseNormalMap = 0u;
-        // --
-        uint32_t u_RoughnessMap = 0u; 
-        uint32_t u_OcclusionMap = 0u;  
-        uint32_t u_EmissiveMap = 0u;  
-        uint32_t u_MetallicMap = 0u;  
-        uint32_t u_AlbedoMap = 0u;    
-        uint32_t u_NormalMap = 0u;    
-        // --
-        uint32_t u_Roughness = 0u;
-        uint32_t u_Occlusion = 0u;
-        uint32_t u_Emissive = 0u;
-        uint32_t u_Metallic = 0u;
-        uint32_t u_Albedo = 0u;
+        MaterialUniform u_Material;
         //--
         uint32_t u_PrefilMap = 0u;
+        uint32_t u_DepthMap = 0u;
         uint32_t u_IrradMap = 0u;
         uint32_t u_BrdfMap = 0u;
-        //--
-        uint32_t u_LightSpace = 0u;
-        uint32_t u_DepthMap = 0u;
         //--
         uint32_t u_ViewPos = 0u;
         uint32_t u_Model = 0u;

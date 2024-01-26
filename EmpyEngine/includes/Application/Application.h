@@ -5,60 +5,49 @@ namespace Empy
 {
     struct Application : AppInterface
     {
-        // creates application context
-        EMPY_INLINE Application() 
-        {
-            m_LayerID = TypeID<Application>();                   
-            m_Context = new AppContext();
-
-            // register event callbacks
-            RegisterEventCallbacks();
-            // create scene entities
-            CreateSceneEntities();
-            // create physics actors
-            CreatePhysicsActors();
-            // create environm. maps
-            CreateSkyboxEnvMaps();
-            // start script instances
-            StartScriptInstances();
-        }
-
-        // destroy application context
-        EMPY_INLINE ~Application() 
-        {
-            // release physics actors
-            DestroyPhysicsActors();
-            EMPY_DELETE(m_Context);
-        }
-
         // runs application main loop
         EMPY_INLINE void RunContext()
         {          
             // application main loop
             while(m_Context->Window->PollEvents())
             {   
-                // compute and update delta time value
-                ComputeFrameDeltaTime();
+                // set delta time
+                UpdateDeltaTime();
 
-                // call update func script instances
-                UpdateScriptInstances();
+                // update scene, 
+                UpdateScene();
 
-                // run and fetch physics simulation
-                RunPhysicsSimulation();
+                // render scene 
+                RenderScene();
 
-                // render scene shadow map
-                RenderSceneDepthMap();
-
-                // render scene to buffer
-                RenderSceneToFBO();                          
-
-                // update all layers
-                UpdateAppLayers();
+                // update layers
+                UpdateLayers();
             }
         }
 
-    private:     
-        EMPY_INLINE void RegisterEventCallbacks()
+        // destroy application context
+        EMPY_INLINE ~Application() 
+        {
+            EMPY_DELETE(m_Context);
+        }
+
+        // creates application context
+        EMPY_INLINE Application() 
+        {
+            // create application context
+            m_LayerID = TypeID<Application>();                   
+            m_Context = new AppContext();
+
+            // register callbacks
+            RegisterCallbacks();
+
+            // start scene
+            StartScene();
+        }
+
+    private:   
+        // registers event callback functions
+        EMPY_INLINE void RegisterCallbacks()
         {
             // set physics event callback
             m_Context->Physics->SetEventCallback([this] (auto e)
@@ -135,48 +124,116 @@ namespace Empy
             });
         }
 
-        // calls script instances on-update 
-        EMPY_INLINE void UpdateScriptInstances()
-        {
-            EnttView<Entity, ScriptComponent>([this] 
-            (auto entity, auto& script) 
-            {
-                if(script.Instance)
-                {
-                    script.Instance->OnUpdate(m_Context->DeltaTime);
-                }
-            });
-        }
-
-        // calls script instances on-start
-        EMPY_INLINE void StartScriptInstances()
-        {
-            EnttView<Entity, ScriptComponent>([this] 
-            (auto entity, auto& script) 
-            {
-                if(script.Instance)
-                {
-                    script.Instance->OnStart();
-                }
-            });
-        }
-
         // computes frame delta time value
-        EMPY_INLINE void ComputeFrameDeltaTime()
+        EMPY_INLINE void UpdateDeltaTime()
         {
             static double sLastTime = glfwGetTime();
             double currentTime = glfwGetTime();
             m_Context->DeltaTime = (currentTime - sLastTime);         
             sLastTime = currentTime;
         }
-
-        // runs physics and fetch physics
-        EMPY_INLINE void RunPhysicsSimulation()
+       
+        // creates entities with components
+        EMPY_INLINE void CreateEntities()
         {
-            // compute physx
+            // load assets
+            auto skyboxAsset = m_Context->Assets->AddSkybox("Resources/Textures/HDRs/Sky.hdr", 2048);
+            auto robotAsset = m_Context->Assets->AddModel("Resources/Models/Walking.fbx", true);
+            auto scriptAsset = m_Context->Assets->AddScript("Resources/Scripts/TestScript.lua");
+            auto sphereAsset = m_Context->Assets->AddModel("Resources/Models/sphere.fbx");
+            auto cubeAsset = m_Context->Assets->AddModel("Resources/Models/cube.fbx");
+            auto mtlAsset = m_Context->Assets->AddMaterial("Nimrod");
+            mtlAsset->Data.Albedo.x = 0.0f;
+            
+            // create scene camera
+            auto camera = CreateEntt<Entity>();                    
+            camera.Attach<InfoComponent>();
+            camera.Attach<TransformComponent>().Transform.Translate.z = 20.0f;
+            camera.Attach<CameraComponent>();
+
+            // create skybox entity
+            auto skybox = CreateEntt<Entity>();                    
+            skybox.Attach<InfoComponent>();
+            skybox.Attach<SkyboxComponent>().Skybox = skyboxAsset->UID;
+            skybox.Attach<TransformComponent>();
+
+            // create directional light
+            auto light = CreateEntt<Entity>();  
+            light.Attach<InfoComponent>();
+            light.Attach<DirectLightComponent>().Light.Intensity = 1.0f;
+            auto& td = light.Attach<TransformComponent>().Transform;
+            td.Rotation = glm::vec3(0.0f, 1.0f, -1.0f);
+
+            // create robot entity
+            auto robot = CreateEntt<Entity>();
+            robot.Attach<InfoComponent>();
+            auto& robotMod = robot.Attach<ModelComponent>();
+            //robotMod.Material = mtlAsset->UID;
+            robotMod.Model = robotAsset->UID;
+            auto& tr = robot.Attach<TransformComponent>().Transform;
+            tr.Translate = glm::vec3(0.0f, -14.99f, -15.0f);
+            tr.Scale = glm::vec3(0.1f);
+
+            // create plane entity (ground)
+            auto plane = CreateEntt<Entity>();
+            plane.Attach<InfoComponent>();
+            plane.Attach<RigidBodyComponent>().RigidBody.Dynamic = false;
+            plane.Attach<ColliderComponent>().Collider.Type = ColliderType::BOX;
+            auto& planeMod = plane.Attach<ModelComponent>();
+            planeMod.Material = mtlAsset->UID;
+            planeMod.Model = cubeAsset->UID;
+            auto& tp = plane.Attach<TransformComponent>().Transform;
+            tp.Translate = glm::vec3(0.0f, -15.0f, -50.0f);
+            tp.Scale = glm::vec3(100.0f, 1.0f, 100.0f);
+
+            // create robot entity
+            for(uint32_t i = 0; i < 10; i++)
+            {
+                auto cube = CreateEntt<Entity>();
+                cube.Attach<InfoComponent>().Name = "Entity" + std::to_string(i);
+                cube.Attach<ColliderComponent>().Collider.Type = ColliderType::BOX;
+                cube.Attach<ScriptComponent>().Script = scriptAsset->UID;
+                cube.Attach<RigidBodyComponent>();
+                auto& modelComp = cube.Attach<ModelComponent>();
+                modelComp.Material = mtlAsset->UID;
+                modelComp.Model = cubeAsset->UID;
+                auto& tc = cube.Attach<TransformComponent>().Transform;
+                tc.Translate = glm::vec3(0.0f, 6.0f * i, -10.0f);
+                tc.Scale *= 5.0f; 
+            }
+
+            // set all target models
+            m_Context->Serializer->Serialize(*m_Context->Assets, "Resources/Projects/assets.yaml");
+            m_Context->Serializer->Serialize(m_Context->Scene, "Resources/Projects/scene.yaml");
+        }
+        
+        // updates all application layers
+        EMPY_INLINE void UpdateLayers()
+        {
+            for(auto layer : m_Context->Layers)
+            {
+                layer->OnUpdate();
+            }    
+            // show scene to screen
+            m_Context->Renderer->ShowFrame();
+        }      
+
+        // updates physcis, scripts, etc.
+        EMPY_INLINE void UpdateScene()
+        {
+            // update script instances
+            EnttView<Entity, ScriptComponent>([this] (auto entity, auto& script) 
+            {
+                if(script.Instance)
+                {
+                    script.Instance->OnUpdate(m_Context->DeltaTime);
+                }
+            });
+
+            // compute physics state
             m_Context->Physics->Simulate(1, m_Context->DeltaTime);      
 
-            // start physics
+            // update physics physics
             EnttView<Entity, RigidBodyComponent>([this] (auto entity, auto& comp) 
             { 
                 auto& transform = entity.template Get<TransformComponent>().Transform;     
@@ -185,44 +242,14 @@ namespace Empy
                 transform.Rotation = glm::degrees(glm::eulerAngles(rot));
                 transform.Translate = PxToVec3(pose.p);
             }); 
+
         }
 
-        // destroys all actors and colliders
-        EMPY_INLINE void DestroyPhysicsActors()
+        // renders depth map, color, etc.
+        EMPY_INLINE void RenderScene()
         {
-            EnttView<Entity, RigidBodyComponent>([this] (auto entity, auto& comp) 
-            { 
-                if(entity.template Has<ColliderComponent>())
-                {
-                    auto& collider = entity.template Get<ColliderComponent>().Collider;     
-                    collider.Material->release();
-                    collider.Shape->release();
-                }
+            // ----------------------------- SHADWO MAP -------------------------------------
 
-                // destroy actor user data                
-                EntityID* owner = static_cast<EntityID*>(comp.RigidBody.Actor->userData);
-                EMPY_DELETE(owner);
-
-                // destroy actor instance
-                comp.RigidBody.Actor->release();
-            });
-        }
-
-        // creates maps for ambient lighting
-        EMPY_INLINE void CreateSkyboxEnvMaps()
-        {
-            // load environment map
-            auto skymap = std::make_shared<Texture2D>("Resources/Textures/HDRs/Sky.hdr", true, true);
-
-            // generate enviroment maps
-            EnttView<Entity, SkyboxComponent>([this, &skymap] (auto entity, auto& comp) {      
-                m_Context->Renderer->InitSkybox(comp.Sky, skymap, 2048);
-            });
-        }
-
-        // rendesr depth values to shadow map
-        EMPY_INLINE void RenderSceneDepthMap()
-        {        
             EnttView<Entity, DirectLightComponent>([this] (auto light, auto&) 
             {
                 // light direction
@@ -233,88 +260,18 @@ namespace Empy
 
                 // render depth 
                 EnttView<Entity, ModelComponent>([this, &lightDir] (auto entity, auto& comp) 
-                {      
+                {    
                     auto& transform = entity.template Get<TransformComponent>().Transform;
-                    m_Context->Renderer->DrawDepth(comp.Model, transform);                     
+                    auto& model = m_Context->Assets->Get<ModelAsset>(comp.Model);
+                    m_Context->Renderer->DrawDepth(model.Data, transform);                                     
                 }); 
 
                 // ffinalize frame
                 m_Context->Renderer->EndShadowPass();
             });
-        }
 
-        // creates all actors and colliders
-        EMPY_INLINE void CreatePhysicsActors()
-        {
-            EnttView<Entity, RigidBodyComponent>([this] 
-            (auto entity, auto& comp) 
-            { 
-                m_Context->Physics->AddRigidBody(entity);               
-            });
-        }
+            // ------------------------ RENDER TO FBO --------------------------------------
 
-        // creates entities with components
-        EMPY_INLINE void CreateSceneEntities()
-        {
-            // load models
-            auto walking = std::make_shared<SkeletalModel>("Resources/Models/Walking.fbx");
-            auto sphereModel = std::make_shared<StaticModel>("Resources/Models/sphere.fbx");
-            auto cubeModel = std::make_shared<StaticModel>("Resources/Models/cube.fbx");
-            
-            // create scene camera
-            auto camera = CreateEntt<Entity>();                    
-            camera.Attach<TransformComponent>().Transform.Translate.z = 20.0f;
-            camera.Attach<CameraComponent>();
-
-            // create skybox entity
-            auto skybox = CreateEntt<Entity>();                    
-            skybox.Attach<TransformComponent>();
-            skybox.Attach<SkyboxComponent>();
-
-            // create directional light
-            auto light = CreateEntt<Entity>();                    
-            light.Attach<DirectLightComponent>().Light.Intensity = 1.0f;
-            auto& td = light.Attach<TransformComponent>().Transform;
-            td.Rotation = glm::vec3(0.0f, 1.0f, -1.0f);
-
-            // create robot entity
-            auto robot = CreateEntt<Entity>();
-            robot.Attach<ModelComponent>().Model = walking;
-            robot.Attach<AnimatorComponent>().Animator = walking->GetAnimator();
-            auto& tr = robot.Attach<TransformComponent>().Transform;
-            tr.Translate = glm::vec3(0.0f, -14.99f, -15.0f);
-            tr.Scale = glm::vec3(0.1f);
-
-            auto scriptName = m_Context->Scripts->
-            LoadScript("Resources/Scripts/TestScript.lua");
-
-            // create plane entity (ground)
-            auto plane = CreateEntt<Entity>();
-            plane.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::STATIC;
-            plane.Attach<ColliderComponent>().Collider.Type = Collider3D::BOX;
-            plane.Attach<ModelComponent>().Model = cubeModel;
-            auto& tp = plane.Attach<TransformComponent>().Transform;
-            tp.Translate = glm::vec3(0.0f, -15.0f, -50.0f);
-            tp.Scale = glm::vec3(100.0f, 1.0f, 100.0f);
-
-            // create robot entity
-            for(int i = 0; i < 5; i++)
-            {
-                auto cube = CreateEntt<Entity>();
-                cube.Attach<ModelComponent>().Model = cubeModel;
-                m_Context->Scripts->AttachScript(cube, scriptName); 
-                cube.Attach<ColliderComponent>().Collider.Type = Collider3D::BOX;
-                cube.Attach<RigidBodyComponent>().RigidBody.Type = RigidBody3D::DYNAMIC;
-
-                auto& tc = cube.Attach<TransformComponent>().Transform;
-                tc.Translate = glm::vec3(0.0f, 6.0f *i, -10.0f);
-                tc.Scale *= 5.0f; 
-            }
-        }
-               
-        // renders scene to the frame buffer
-        EMPY_INLINE void RenderSceneToFBO()
-        {
             // start new frame
             m_Context->Renderer->NewFrame(); 
                                 
@@ -361,38 +318,54 @@ namespace Empy
             // render models
             EnttView<Entity, ModelComponent>([this] (auto entity, auto& comp) 
             {      
-                // compute key frames
-                if(entity.template Has<AnimatorComponent>())
-                {
-                    auto& animator = entity.template Get<AnimatorComponent>().Animator;
-                    auto& transforms = animator->Animate(m_Context->DeltaTime);
-                    m_Context->Renderer->SetJoints(transforms);
-                }
-
+                // retrieve assets
                 auto& transform = entity.template Get<TransformComponent>().Transform;
-                m_Context->Renderer->Draw(comp.Model, comp.Material, transform);    
+                auto& material = m_Context->Assets->Get<MaterialAsset>(comp.Material);
+                auto& model = m_Context->Assets->Get<ModelAsset>(comp.Model);
+
+                // render model
+                m_Context->Renderer->Animate(model.Data, m_Context->DeltaTime);
+                m_Context->Renderer->Draw(model.Data, material.Data, transform); 
             });  
 
             // render skybox
             EnttView<Entity, SkyboxComponent>([this] (auto entity, auto& comp) 
             {      
                 auto& transform = entity.template Get<TransformComponent>().Transform;
-                m_Context->Renderer->DrawSkybox(comp.Sky, transform);                    
+                auto& skybox = m_Context->Assets->Get<SkyboxAsset>(comp.Skybox);
+                m_Context->Renderer->DrawSkybox(skybox.Data, transform);                    
             });
 
             // end frame                
             m_Context->Renderer->EndFrame();         
         }       
-
-        // updates all application layers
-        EMPY_INLINE void UpdateAppLayers()
+                       
+        // starts physics, scripts, etc.
+        EMPY_INLINE void StartScene()
         {
-            for(auto layer : m_Context->Layers)
+            // create scene entities
+            CreateEntities();
+
+            // generate enviroment maps
+            EnttView<Entity, SkyboxComponent>([this] (auto entity, auto& comp) 
+            {      
+                auto& skybox = m_Context->Assets->Get<SkyboxAsset>(comp.Skybox);                        
+                m_Context->Renderer->InitSkybox(skybox.Data, skybox.EnvMap, skybox.Size);                
+            });          
+
+            // creates and start scripts
+            EnttView<Entity, ScriptComponent>([this] (auto entity, auto& comp) 
             {
-                layer->OnUpdate();
-            }    
-            // show scene to screen
-            m_Context->Renderer->ShowFrame();
-        }               
+                auto& script = m_Context->Assets->Get<ScriptAsset>(comp.Script);                        
+                auto name = m_Context->Scripts->LoadScript(script.Source);
+                m_Context->Scripts->AttachScript(entity, name);
+            });
+
+            // create rigid bodies
+            EnttView<Entity, RigidBodyComponent>([this] (auto entity, auto& comp) 
+            { 
+                m_Context->Physics->AddRigidBody(entity);               
+            });
+        }
     };
 }

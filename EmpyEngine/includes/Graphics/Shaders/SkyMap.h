@@ -13,7 +13,7 @@ namespace Empy
             u_Map = glGetUniformLocation(m_ShaderID, "u_map");
         } 
 
-        EMPY_INLINE uint32_t Generate(Texture& texture, SkyboxMesh& mesh, int32_t size) 
+        EMPY_INLINE uint32_t Generate(Texture2D& texture, SkyboxMesh& mesh, int32_t size) 
         {
             // view matrices
             glm::mat4 views[] = 
@@ -36,7 +36,7 @@ namespace Empy
             glUniformMatrix4fv(u_Proj, 1, GL_FALSE, glm::value_ptr(proj));
 
             // set texture source
-            texture->Use(u_Map, 0);
+            texture.Use(u_Map, 0);
 
             // generate cube map
             uint32_t cubeMap = 0u;

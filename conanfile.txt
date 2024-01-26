@@ -1,6 +1,8 @@
 [requires]
 glm/cci.20230113
 stb/cci.20230920
+magic_enum/0.9.5
+yaml-cpp/0.8.0
 opengl/system
 spdlog/1.12.0
 assimp/5.2.2
@@ -15,6 +17,7 @@ lua/5.4.6
 cmake
 
 [options]
+yaml-cpp:shared=True
 assimp:shared=False
 physx:shared=True
 glew:shared=False

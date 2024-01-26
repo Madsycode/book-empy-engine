@@ -1,41 +1,76 @@
 #pragma once
-#include "../Models/Model.h"
-#include "../Textures/Texture.h"
+#include "Common/Core.h"
 
 namespace Empy
 {
-    // skybox data
-    struct Skybox
+    struct MaterialUniform 
     {
-        EMPY_INLINE Skybox(const Skybox&) = default;
-        EMPY_INLINE Skybox() = default; 
-        uint32_t PrefilMap = 0u;            
-        uint32_t IrradMap = 0u;        
-        uint32_t CubeMap = 0u;        
-        uint32_t BrdfMap = 0u;
+        EMPY_INLINE void Initialize(uint32_t shader)
+        {
+            UseRoughnessMap = glGetUniformLocation(shader, "u_material.UseRoughnessMap");
+            UseOcclusionMap = glGetUniformLocation(shader, "u_material.UseOcclusionMap");
+            UseEmissiveMap = glGetUniformLocation(shader, "u_material.UseEmissiveMap");
+            UseMetallicMap = glGetUniformLocation(shader, "u_material.UseMetallicMap");
+            UseAlbedoMap = glGetUniformLocation(shader, "u_material.UseAlbedoMap");
+            UseNormalMap = glGetUniformLocation(shader, "u_material.UseNormalMap");
+
+            RoughnessMap = glGetUniformLocation(shader, "u_material.RoughnessMap");
+            OcclusionMap = glGetUniformLocation(shader, "u_material.OcclusionMap");
+            EmissiveMap = glGetUniformLocation(shader, "u_material.EmissiveMap");
+            MetallicMap = glGetUniformLocation(shader, "u_material.MetallicMap");
+            AlbedoMap = glGetUniformLocation(shader, "u_material.AlbedoMap");
+            NormalMap = glGetUniformLocation(shader, "u_material.NormalMap");
+
+            Roughness = glGetUniformLocation(shader, "u_material.Roughness");
+            Occlusion = glGetUniformLocation(shader, "u_material.Occlusion");
+            Emissive = glGetUniformLocation(shader, "u_material.Emissive");
+            Metallic = glGetUniformLocation(shader, "u_material.Metallic");
+            Albedo = glGetUniformLocation(shader, "u_material.Albedo");
+        }
+
+        uint32_t UseRoughnessMap = 0u;
+        uint32_t UseOcclusionMap = 0u;
+        uint32_t UseEmissiveMap = 0u;
+        uint32_t UseMetallicMap = 0u;
+        uint32_t UseAlbedoMap = 0u;
+        uint32_t UseNormalMap = 0u;
+        // --
+        uint32_t RoughnessMap = 0u; 
+        uint32_t OcclusionMap = 0u;  
+        uint32_t EmissiveMap = 0u;  
+        uint32_t MetallicMap = 0u;  
+        uint32_t AlbedoMap = 0u;    
+        uint32_t NormalMap = 0u;    
+        // --
+        uint32_t Roughness = 0u;
+        uint32_t Occlusion = 0u;
+        uint32_t Emissive = 0u;
+        uint32_t Metallic = 0u;
+        uint32_t Albedo = 0u;
     };
 
     // pbr material
-    struct PbrMaterial 
+    struct Material 
     {
-        EMPY_INLINE PbrMaterial(const PbrMaterial&) = default;
-        EMPY_INLINE PbrMaterial() = default;
+        EMPY_INLINE Material(const Material&) = default;
+        EMPY_INLINE Material() = default;
 
-        glm::vec3 Albedo = glm::vec3(0.5f, 0.5f, 0.6f);
+        // material maps
+        uint32_t RoughnessMap = 0u;
+        uint32_t OcclusionMap = 0u;
+        uint32_t EmissiveMap = 0u;
+        uint32_t MetallicMap = 0u;
+        uint32_t AlbedoMap = 0u;
+        uint32_t NormalMap = 0u;
+
+        // material props
         glm::vec3 Emissive = glm::vec3(0.0f);
-
+        glm::vec3 Albedo = glm::vec3(1.0f);
         float Occlusion = 1.0f;
         float Roughness = 0.5f;
         float Metallic = 0.6f;
-
-        Texture OcclusionMap;
-        Texture RoughnessMap;
-        Texture MetallicMap;
-        Texture EmissiveMap;
-        Texture NormalMap;
-        Texture AlbedoMap;
     };
-
+      
     // point light
     struct PointLight 
     {
@@ -113,5 +148,16 @@ namespace Empy
         float NearPlane = 0.3000f;
         float FarPlane = 1000.0f;
         float FOV = 45.0f;
+    };
+
+    // skybox data
+    struct Skybox
+    {
+        EMPY_INLINE Skybox(const Skybox&) = default;
+        EMPY_INLINE Skybox() = default; 
+        uint32_t PrefilMap = 0u;            
+        uint32_t IrradMap = 0u;        
+        uint32_t CubeMap = 0u;        
+        uint32_t BrdfMap = 0u;
     };
 }

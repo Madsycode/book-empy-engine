@@ -39,7 +39,7 @@ namespace Empy
         
         // creates instance of existing script
         EMPY_INLINE bool AttachScript(Entity& entity, const std::string& name)
-        {        
+        {                    
             // check if handle is correct and has a constructor
             if (!m_Lua[name].valid() && !m_Lua[name]["Constructor"].valid()) 
             {
@@ -59,35 +59,41 @@ namespace Empy
                 EMPY_ERROR("failed to create script: {}", error.what());
                 return false;
             }
-            
-            entity.Attach<ScriptComponent>().Instance = 
-            std::make_unique<Script>(object, name);
+
+            auto& instance = entity.Get<ScriptComponent>().Instance;
+            instance = std::make_unique<Script>(object, name);
+            instance->OnStart();
             return true; 
         }        
 
         // loads script into lua state
         EMPY_INLINE std::string LoadScript(const std::string& filepath)
         {
-            auto Initializer = m_Lua["Initializer"];
+            std::filesystem::path path(filepath);
+            auto scriptName = path.stem().string();
+
+            // check if already loaded
+            if(m_Lua[scriptName].valid())
+            {
+                return scriptName;
+            }
 
             // check if modules are loaded
-            if(!Initializer.valid()) 
+            if(!m_Lua["Initializer"].valid()) 
             {
                 EMPY_ERROR("failed to load script! core not initialized!");
                 return "";
             }
 
             // check if script file exits
-            std::filesystem::path path(filepath);
             if(!std::filesystem::exists(path))
             {
-                EMPY_ERROR("failed to load script! invalid file path");
+                EMPY_ERROR("failed to load script: invalid file path!");
                 return "";
             }
 
             // create script class handle
-            auto scriptName = path.stem().string();
-            m_Lua[scriptName] = Initializer();
+            m_Lua[scriptName] = m_Lua["Initializer"]();
             m_Lua.script_file(filepath);   
             return scriptName;
         }
@@ -97,15 +103,13 @@ namespace Empy
         EMPY_INLINE void SetApiFunctions(EntityRegistry* scene, AppWindow* window)
         {
             // api function to get entity transform
-            m_Lua.set_function("ApiGetTransform", [this, scene] 
-            (EntityID entity)
+            m_Lua.set_function("ApiGetTransform", [this, scene] (EntityID entity)
             {
                 return std::ref(scene->get<TransformComponent>(entity).Transform);
             });
 
             // api function to check if mouse down
-            m_Lua.set_function("ApiMouseDown", [this, window] 
-            (int32_t button)
+            m_Lua.set_function("ApiMouseDown", [this, window] (int32_t button)
             {
                 return window->IsMouse(button);
             });
@@ -118,7 +122,7 @@ namespace Empy
                 if(scene->all_of<RigidBodyComponent>(entity))
                 {
                     auto& body = scene->get<RigidBodyComponent>(entity).RigidBody;
-                    if(body.Type == body.DYNAMIC)
+                    if(body.Dynamic)
                     {
                         auto actor = static_cast<PxRigidDynamic*>(body.Actor);
                         actor->addForce(ToPxVec3(force), 
@@ -133,15 +137,13 @@ namespace Empy
             });
 
             // api function to check if key pressed
-            m_Lua.set_function("ApiKeyDown", [this, window] 
-            (int32_t key)
+            m_Lua.set_function("ApiKeyDown", [this, window] (int32_t key)
             {
                 return window->IsKey(key);
             });
 
             // api function to destroy entity
-            m_Lua.set_function("ApiDestroy", [this, scene] 
-            (EntityID entity)
+            m_Lua.set_function("ApiDestroy", [this, scene] (EntityID entity)
             {
                 // return if entity is dead!
                 if(scene->valid(entity) == false) { return; }

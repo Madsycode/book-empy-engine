@@ -2,18 +2,23 @@
 #include <assimp/postprocess.h>
 #include <assimp/quaternion.h>
 #include <assimp/Importer.hpp>
+#include "../Utilities/Data.h"
 #include <assimp/scene.h>
 #include "Animator.h"
 
 namespace Empy
 {
+
 	// abstract model
 	struct Model 
 	{
-		EMPY_INLINE virtual bool HasJoint() { return false; }
+		EMPY_INLINE virtual JointMatrices* Animate(float) { return nullptr; }
+		EMPY_INLINE virtual bool HasJoints() { return false; }
 		EMPY_INLINE virtual void Load(const std::string&) {}
-		EMPY_INLINE virtual void Draw(uint32_t mode) {}
+		EMPY_INLINE virtual void Draw(uint32_t) {}
 	};	
+
+	//  -------------------------------------------------------
 
 	// static model
     struct StaticModel : Model
@@ -23,6 +28,15 @@ namespace Empy
         EMPY_INLINE StaticModel(const std::string& path)
         {
             Load(path);
+        }
+		
+		EMPY_INLINE void Draw(uint32_t mode) override final
+        {
+			// render meshes
+            for(auto& mesh : m_Meshes)
+            {
+                mesh->Draw(mode);
+            }
         }
 
         EMPY_INLINE void Load(const std::string& path) override final
@@ -43,30 +57,9 @@ namespace Empy
             // parse all meshes
 			ParseNode(ai_scene, ai_scene->mRootNode);
         }
-
-        EMPY_INLINE void Draw(uint32_t mode) override final
-        {
-            for(auto& mesh : m_Meshes)
-            {
-                mesh->Draw(mode);
-            }
-        }
-
+		
     private:
-        EMPY_INLINE void ParseNode(const aiScene* ai_scene, aiNode* ai_node) 
-        {
-			for (uint32_t i = 0; i < ai_node->mNumMeshes; i++) 
-            {
-				ParseMesh(ai_scene->mMeshes[ai_node->mMeshes[i]]);
-			}
-
-			for (uint32_t i = 0; i < ai_node->mNumChildren; i++) 
-            {
-				ParseNode(ai_scene, ai_node->mChildren[i]);
-			}
-		}
-
-        EMPY_INLINE void ParseMesh(aiMesh* ai_mesh) 
+		EMPY_INLINE void ParseMesh(aiMesh* ai_mesh) 
         {
 			// mesh data
 			MeshData<ShadedVertex> data;
@@ -104,24 +97,51 @@ namespace Empy
             // create new mesh instance
 			m_Meshes.push_back(std::make_unique<ShadedMesh>(data));
 		}
+		
+		EMPY_INLINE void ParseNode(const aiScene* ai_scene, aiNode* ai_node) 
+        {
+			for (uint32_t i = 0; i < ai_node->mNumMeshes; i++) 
+            {
+				ParseMesh(ai_scene->mMeshes[ai_node->mMeshes[i]]);
+			}
+
+			for (uint32_t i = 0; i < ai_node->mNumChildren; i++) 
+            {
+				ParseNode(ai_scene, ai_node->mChildren[i]);
+			}
+		}
 
     private:
         std::vector<std::unique_ptr<ShadedMesh>> m_Meshes;
-    };
+    };        
+
+	//  -------------------------------------------------------
 
 	// animated model
 	struct SkeletalModel : Model
 	{
     	using JointMap = std::unordered_map<std::string, Joint>;
 
+		EMPY_INLINE SkeletalModel() = default;						
+
 		EMPY_INLINE SkeletalModel(const std::string& path)
 		{
 			Load(path);
 		}
+		
+		EMPY_INLINE bool HasJoints()  override final 
+		{ 
+			return m_JointCount; 
+		}
 
-		EMPY_INLINE SkeletalModel() = default;		
-
-		EMPY_INLINE bool HasJoint() override final { return m_JointCount; }
+		EMPY_INLINE void Draw(uint32_t mode) override final
+        {
+			// render meshes
+            for(auto& mesh : m_Meshes)
+            {
+                mesh->Draw(mode);
+            }
+        }
 
 		EMPY_INLINE void Load(const std::string& path) override final
         {
@@ -152,18 +172,10 @@ namespace Empy
 			// parse animations
 			ParseAnimations(ai_scene, jointMap);
 		}
-		
-		EMPY_INLINE void Draw(uint32_t mode) override final
-        {
-            for(auto& mesh : m_Meshes)
-            {
-                mesh->Draw(mode);
-            }
-        }
 
-		EMPY_INLINE auto GetAnimator()
+		EMPY_INLINE JointMatrices* Animate(float dt) override final
 		{
-			return m_Animator;
+			return m_Animator->Animate(dt);
 		}
 
 	private:
@@ -253,7 +265,7 @@ namespace Empy
 			ParseHierarchy(ai_scene->mRootNode, m_Animator->m_Root, jointMap);
 
 			// initialize animator
-			m_Animator->m_Transforms.resize(m_JointCount);
+			m_Animator->m_Joints.resize(m_JointCount);
 		}
 				
 		EMPY_INLINE void ParseMesh(const aiMesh* ai_mesh, JointMap& jointMap) 
@@ -319,7 +331,5 @@ namespace Empy
 		uint32_t m_JointCount = 0;		
 	};
 
-	// model typedef
-	using Animator3D = std::shared_ptr<Animator>;
 	using Model3D = std::shared_ptr<Model>;
 }

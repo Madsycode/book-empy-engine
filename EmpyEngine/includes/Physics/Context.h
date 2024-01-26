@@ -68,50 +68,48 @@ namespace Empy
             // create a rigid body actor
             if(entity.template Has<ColliderComponent>())
             {
-                // create collider shape
-
+                // get collider component
                 auto& collider = entity.template Get<ColliderComponent>().Collider;
-
+                
                 // create collider material
                 collider.Material = m_Physics->createMaterial(collider.StaticFriction, 
                     collider.DynamicFriction, collider.Restitution
                 );
 
-                if(collider.Type == Collider3D::BOX)
+                if(collider.Type == ColliderType::BOX)
                 {
                     PxBoxGeometry box(ToPxVec3(transform.Scale/2.0f));
                     collider.Shape = m_Physics->createShape(box, *collider.Material);
                 }
-                else if(collider.Type == Collider3D::SPHERE)
+                else if(collider.Type == ColliderType::SPHERE)
                 {
                     PxSphereGeometry sphere(transform.Scale.x/2.0f);
                     collider.Shape = m_Physics->createShape(sphere, *collider.Material);
-                }            
+                }                       
                 else
                 {
                     EMPY_ERROR("Error creating collider invalid type provided");
                     return;
                 }
 
-                // create actor instanace
-
-                if(body.Type == RigidBody3D::DYNAMIC) 
+                // create actor
+                if(body.Dynamic) 
                 {   
                     body.Actor = PxCreateDynamic(*m_Physics, pose, *collider.Shape, body.Density);    
                     body.Actor->setActorFlag(PxActorFlag::eSEND_SLEEP_NOTIFIES, true);
                 }
-                else if(body.Type == RigidBody3D::STATIC)
+                else 
                 {
                     body.Actor = PxCreateStatic(*m_Physics, pose, *collider.Shape);                    
                 }
             }
             else
             {
-                if(body.Type == RigidBody3D::DYNAMIC) 
+                if(body.Dynamic) 
                 {   
                     body.Actor = m_Physics->createRigidDynamic(pose);
                 }
-                else if(body.Type == RigidBody3D::STATIC)
+                else 
                 {
                     body.Actor = m_Physics->createRigidStatic(pose);
                 }

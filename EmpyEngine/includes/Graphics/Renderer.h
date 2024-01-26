@@ -59,6 +59,14 @@ namespace Empy
             m_Pbr->SetSpotLight(light, transform, index);
         }
 
+        EMPY_INLINE void Animate(Model3D model, float dt) 
+        {
+            if(auto joints = model->Animate(dt))
+            {
+                m_Pbr->SetJoints(*joints);
+            }
+        }
+
         EMPY_INLINE void SetDirectLightCount(int32_t count)
         {
             m_Pbr->SetDirectLightCount(count);
@@ -76,14 +84,9 @@ namespace Empy
        
         // --
 
-        EMPY_INLINE void Draw(Model3D& model, PbrMaterial& material, Transform3D& transform)
+        EMPY_INLINE void Draw(Model3D& model, Material& material, Transform3D& transform)
         {
             m_Pbr->Draw(model, material, transform);
-        }
-
-        EMPY_INLINE void SetJoints(std::vector<glm::mat4>& transforms) 
-        {
-            m_Pbr->SetJoints(transforms);
         }
 
         EMPY_INLINE void DrawDepth(Model3D& model, Transform3D& transform)
@@ -91,19 +94,19 @@ namespace Empy
             m_Shadow->Draw(model, transform);
         }
 
-        EMPY_INLINE void InitSkybox(Skybox& sky, Texture& texture, int32_t size)
+        EMPY_INLINE void InitSkybox(Skybox& skybox, Texture2D& texture, int32_t size)
         {
-            sky.BrdfMap = m_Brdf->Generate(512);
-            sky.CubeMap = m_SkyMap->Generate(texture, m_SkyboxMesh, size);            
-            sky.IrradMap = m_Irrad->Generate(sky.CubeMap, m_SkyboxMesh, 32);            
-            sky.PrefilMap = m_Prefil->Generate(sky.CubeMap, m_SkyboxMesh, 128);                      
+            skybox.BrdfMap = m_Brdf->Generate(512);
+            skybox.CubeMap = m_SkyMap->Generate(texture, m_SkyboxMesh, size);            
+            skybox.IrradMap = m_Irrad->Generate(skybox.CubeMap, m_SkyboxMesh, 32);            
+            skybox.PrefilMap = m_Prefil->Generate(skybox.CubeMap, m_SkyboxMesh, 128);                      
         }
 
-        EMPY_INLINE void DrawSkybox(Skybox& sky, Transform3D& transform)
-        {
-            m_Skybox->Draw(m_SkyboxMesh, sky.CubeMap, transform);
-            m_Pbr->SetEnvMaps(sky.IrradMap, sky.PrefilMap, 
-            sky.BrdfMap, m_Shadow->GetDepthMap());   
+        EMPY_INLINE void DrawSkybox(Skybox& skybox, Transform3D& transform)
+        {            
+            m_Skybox->Draw(m_SkyboxMesh, skybox.CubeMap, transform);
+            m_Pbr->SetEnvMaps(skybox.IrradMap, skybox.PrefilMap, 
+            skybox.BrdfMap, m_Shadow->GetDepthMap());   
         }
 
         EMPY_INLINE void SetCamera(Camera3D& camera, Transform3D& transform)

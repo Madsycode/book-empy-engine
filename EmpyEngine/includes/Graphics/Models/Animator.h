@@ -5,7 +5,7 @@ namespace Empy
 {
     struct Animator 
     {
-        EMPY_INLINE auto& Animate(float deltaTime)
+        EMPY_INLINE JointMatrices* Animate(float deltaTime)
         {
             if(m_Sequence < m_Animations.size()) 
             { 
@@ -13,7 +13,7 @@ namespace Empy
                 m_Time = fmod(m_Time, m_Animations[m_Sequence].Duration);
                 UpdateJoints(m_Root, glm::identity<glm::mat4>());
             }
-            return m_Transforms;
+            return &m_Joints;
         }
     
     private:                   
@@ -51,7 +51,7 @@ namespace Empy
             glm::mat4 transform = parentTransform * Interpolate(prev, next, progression);
 
             // update joint transform 
-            m_Transforms[joint.Index] = (transform * m_GlobalTransform * joint.Offset);
+            m_Joints[joint.Index] = (transform * m_GlobalTransform * joint.Offset);
 
             // update children joints
             for (auto& child : joint.Children) { UpdateJoints(child, transform); }
@@ -59,11 +59,11 @@ namespace Empy
                 
     private:
         std::vector<Animation> m_Animations;
-        std::vector<glm::mat4> m_Transforms;
         glm::mat4 m_GlobalTransform;
         friend struct SkeletalModel;
         int32_t m_Sequence = 0;
         float m_Time = 0.0f;
+        JointMatrices m_Joints;
 		Joint m_Root;
     };
 }

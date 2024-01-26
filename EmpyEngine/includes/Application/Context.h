@@ -2,6 +2,7 @@
 #include "Scripts/Context.h"
 #include "Physics/Context.h"
 #include "Graphics/Renderer.h"
+#include "Auxiliaries/Serializer.h"
 
 namespace Empy
 {
@@ -16,10 +17,10 @@ namespace Empy
             Window = std::make_unique<AppWindow>(&Dispatcher, 1280, 720, "Empy Engine");
             Scripts = std::make_unique<ScriptContext>(&Scene, Window.get());
             Renderer = std::make_unique<GraphicsRenderer>(1280, 720);
+            Serializer = std::make_unique<DataSerializer>();
             Physics = std::make_unique<PhysicsContext>();
+            Assets = std::make_unique<AssetRegistry>();
             DeltaTime = 0.0;
-
-            // create and init scripts context
         }
 
         EMPY_INLINE ~AppContext()
@@ -31,8 +32,10 @@ namespace Empy
         }
         
         std::unique_ptr<GraphicsRenderer> Renderer;
+        std::unique_ptr<DataSerializer> Serializer;
         std::unique_ptr<PhysicsContext> Physics;
         std::unique_ptr<ScriptContext> Scripts;
+        std::unique_ptr<AssetRegistry> Assets;
         std::vector<AppInterface*> Layers;
         std::unique_ptr<AppWindow> Window;
         EventDispatcher Dispatcher;

@@ -26,4 +26,6 @@ namespace Empy
         glm::mat4 Offset;
         int32_t Index;
 	};
+
+    using JointMatrices = std::vector<glm::mat4>;
 }
