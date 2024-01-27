@@ -40,9 +40,8 @@ namespace Empy
             
             // creating the window
             glfwSetWindowMaximizeCallback(m_Handle, OnMaximize);
-            //glfwSetFramebufferSizeCallback(m_Handle, OnResize);
+            glfwSetFramebufferSizeCallback(m_Handle, OnResize);
             glfwSetWindowIconifyCallback(m_Handle, OnIconify);
-            glfwSetWindowSizeCallback(m_Handle, OnResize);
             glfwSetMouseButtonCallback(m_Handle, OnMouse);
             glfwSetWindowCloseCallback(m_Handle, OnClose);
             glfwSetCursorPosCallback(m_Handle, OnMotion);

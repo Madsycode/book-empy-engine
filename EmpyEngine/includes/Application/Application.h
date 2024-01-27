@@ -135,14 +135,14 @@ namespace Empy
        
         // creates entities with components
         EMPY_INLINE void CreateEntities()
-        {
+        {      
             // load assets
-            auto skyboxAsset = m_Context->Assets->AddSkybox("Resources/Textures/HDRs/Sky.hdr", 2048);
-            auto robotAsset = m_Context->Assets->AddModel("Resources/Models/Walking.fbx", true);
-            auto scriptAsset = m_Context->Assets->AddScript("Resources/Scripts/TestScript.lua");
-            auto sphereAsset = m_Context->Assets->AddModel("Resources/Models/sphere.fbx");
-            auto cubeAsset = m_Context->Assets->AddModel("Resources/Models/cube.fbx");
-            auto mtlAsset = m_Context->Assets->AddMaterial("Nimrod");
+            auto skyboxAsset = m_Context->Assets->AddSkybox(RandomU64(), "Resources/Textures/HDRs/Sky.hdr", 2048);
+            auto robotAsset = m_Context->Assets->AddModel(RandomU64(), "Resources/Models/Walking.fbx", true);
+            auto scriptAsset = m_Context->Assets->AddScript(RandomU64(), "Resources/Scripts/TestScript.lua");
+            auto sphereAsset = m_Context->Assets->AddModel(RandomU64(), "Resources/Models/sphere.fbx");
+            auto cubeAsset = m_Context->Assets->AddModel(RandomU64(), "Resources/Models/cube.fbx");
+            auto mtlAsset = m_Context->Assets->AddMaterial(RandomU64(), "Nimrod");
             mtlAsset->Data.Albedo.x = 0.0f;
             
             // create scene camera
@@ -192,7 +192,7 @@ namespace Empy
                 auto cube = CreateEntt<Entity>();
                 cube.Attach<InfoComponent>().Name = "Entity" + std::to_string(i);
                 cube.Attach<ColliderComponent>().Collider.Type = ColliderType::BOX;
-                cube.Attach<ScriptComponent>().Script = scriptAsset->UID;
+                //cube.Attach<ScriptComponent>().Script = scriptAsset->UID;
                 cube.Attach<RigidBodyComponent>();
                 auto& modelComp = cube.Attach<ModelComponent>();
                 modelComp.Material = mtlAsset->UID;
@@ -201,10 +201,9 @@ namespace Empy
                 tc.Translate = glm::vec3(0.0f, 6.0f * i, -10.0f);
                 tc.Scale *= 5.0f; 
             }
-
             // set all target models
             m_Context->Serializer->Serialize(*m_Context->Assets, "Resources/Projects/assets.yaml");
-            m_Context->Serializer->Serialize(m_Context->Scene, "Resources/Projects/scene.yaml");
+            m_Context->Serializer->Serialize(m_Context->Scene, "Resources/Projects/scene.yaml");           
         }
         
         // updates all application layers
@@ -345,6 +344,10 @@ namespace Empy
         {
             // create scene entities
             CreateEntities();
+
+            // deserialize scene 
+            m_Context->Serializer->Deserialize(*m_Context->Assets, "Resources/Projects/assets.yaml");
+            m_Context->Serializer->Deserialize(m_Context->Scene, "Resources/Projects/scene.yaml");
 
             // generate enviroment maps
             EnttView<Entity, SkyboxComponent>([this] (auto entity, auto& comp) 

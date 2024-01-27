@@ -132,6 +132,12 @@ namespace Empy
         }
 
     protected:
+        EMPY_INLINE GLFWwindow* GetWindowHandle() 
+        {
+            return m_Context->Window->Handle();
+        }
+
+    protected:
         EMPY_INLINE virtual void OnUpdate() {}
         EMPY_INLINE virtual void OnStart() {}
 

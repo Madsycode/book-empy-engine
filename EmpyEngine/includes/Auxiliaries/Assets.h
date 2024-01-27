@@ -100,7 +100,7 @@ namespace Empy
             AddEmpty<SceneAsset>();
         }
 
-        EMPY_INLINE auto AddSkybox(const std::string& source, int32_t size, bool isHDR = true, bool flipV = true)
+        EMPY_INLINE auto AddSkybox(AssetID uid, const std::string& source, int32_t size, bool isHDR = true, bool flipV = true)
         {
             auto asset = std::make_shared<SkyboxAsset>();
             asset->EnvMap.Load(source, isHDR, flipV);
@@ -108,22 +108,22 @@ namespace Empy
             asset->IsHDR = isHDR;
             asset->FlipV = flipV;
             asset->Size = size;
-            Add(source, asset);
+            Add(uid, source, asset);
             return asset;
         }
        
-        EMPY_INLINE auto AddTexture(const std::string& source, bool isHDR = false, bool flipV = true)
+        EMPY_INLINE auto AddTexture(AssetID uid, const std::string& source, bool isHDR = false, bool flipV = true)
         {
             auto asset = std::make_shared<TextureAsset>();
             asset->Data.Load(source, isHDR, flipV);
             asset->Type = AssetType::TEXTURE;
             asset->FlipV = flipV;
             asset->IsHDR = isHDR;
-            Add(source, asset);
+            Add(uid, source, asset);
             return asset;
         }
 
-        EMPY_INLINE auto AddModel(const std::string& source, bool hasJoints = false)
+        EMPY_INLINE auto AddModel(AssetID uid, const std::string& source, bool hasJoints = false)
         {
             auto asset = std::make_shared<ModelAsset>();
             asset->HasJoints = hasJoints;
@@ -135,31 +135,31 @@ namespace Empy
             else
                 asset->Data = std::make_shared<StaticModel>(source);
 
-            Add(source, asset);
+            Add(uid, source, asset);
             return asset;
         }
 
-        EMPY_INLINE auto AddMaterial(const std::string& name)
+        EMPY_INLINE auto AddMaterial(AssetID uid, const std::string& name)
         {
             auto asset = std::make_shared<MaterialAsset>();
             asset->Type = AssetType::MATERIAL;
-            Add(name, asset);
+            Add(uid, name, asset);
             return asset;
         }
         
-        EMPY_INLINE auto AddScript(const std::string& source)
+        EMPY_INLINE auto AddScript(AssetID uid, const std::string& source)
         {
             auto asset = std::make_shared<ScriptAsset>();
             asset->Type = AssetType::SCRIPT;
-            Add(source, asset);
+            Add(uid, source, asset);
             return asset;
         }
 
-        EMPY_INLINE auto AddScene(const std::string& source)
+        EMPY_INLINE auto AddScene(AssetID uid, const std::string& source)
         {
             auto asset = std::make_shared<SceneAsset>();
             asset->Type = AssetType::SCENE;
-            Add(source, asset);
+            Add(uid, source, asset);
             return asset;
         }
      
@@ -196,13 +196,22 @@ namespace Empy
             return m_Registry[TypeID<T>()];
         }
 
+        EMPY_INLINE void Clear()
+        {
+            m_Registry.clear();
+        }
+
     private:
         // adds a new asset to the registry
         template <typename T>
-        EMPY_INLINE void Add(const std::string& source, std::shared_ptr<T>& asset)
+        EMPY_INLINE void Add(
+            AssetID uid, 
+            const std::string& source, 
+            std::shared_ptr<T>& asset
+        )
         {            
+            asset->UID = uid;
             asset->Source = source;
-            asset->UID = RandomU64();
             std::filesystem::path path(source);
             asset->Name = path.stem().string();
             m_Registry[TypeID<T>()][asset->UID] = asset;

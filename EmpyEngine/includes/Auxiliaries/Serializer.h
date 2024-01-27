@@ -1,5 +1,5 @@
 #pragma once
-#include "Assets.h"
+#include "ECS.h"
 #include "Common/YAML.h"
 
 namespace Empy
@@ -176,7 +176,7 @@ namespace Empy
             filepath << emitter.c_str();
         }
 
-        EMPY_INLINE void Serialize(AssetRegistry& assets, const std::string& path)
+        EMPY_INLINE void Serialize(AssetRegistry& registry, const std::string& path)
         {
             YAML::Emitter emitter;
 
@@ -184,7 +184,7 @@ namespace Empy
             {
                 emitter << YAML::Key << "ASSETS" << YAML::Value << YAML::BeginSeq;
                 {
-                    assets.View([&] (Asset* asset) 
+                    registry.View([&] (Asset* asset) 
                     {
                         // asset type to string
                         std::string typeName(magic_enum::enum_name(asset->Type));
@@ -210,6 +210,7 @@ namespace Empy
                                     emitter << YAML::Key << "EmissiveMap" << YAML::Value << mtl->EmissiveMap;
                                     emitter << YAML::Key << "MetallicMap" << YAML::Value << mtl->MetallicMap;
                                     emitter << YAML::Key << "AlbedoMap" << YAML::Value << mtl->AlbedoMap;
+                                    emitter << YAML::Key << "NormalMap" << YAML::Value << mtl->NormalMap;
 
                                     // properties
                                     emitter << YAML::Key << "Roughness" << YAML::Value << mtl->Data.Roughness;
@@ -265,14 +266,15 @@ namespace Empy
             filepath << emitter.c_str();
         }
 
-        EMPY_INLINE void Deserialze(EntityRegistry& scene, const std::string& path)
+        EMPY_INLINE void Deserialize(EntityRegistry& scene, const std::string& path)
         {
             try 
             {
                 auto root = YAML::LoadFile(path);
                 auto& nodes = root["ENTITIES"];
+                scene.clear();
 
-                // 
+                // deserialize nodes
                 for(auto& node : nodes)
                 {
                     // create entity
@@ -293,7 +295,7 @@ namespace Empy
                         auto& camera = scene.emplace<CameraComponent>(entity).Camera;
                         camera.NearPlane = data["NearPlane"].as<float>();
                         camera.FarPlane = data["FarPlane"].as<float>();
-                        camera.FOV = data["FOV"].as<AssetID>();
+                        camera.FOV = data["FOV"].as<float>();
                     }
 
                     // deserialize transform
@@ -310,7 +312,7 @@ namespace Empy
                     {
                         auto& body = scene.emplace<RigidBodyComponent>(entity).RigidBody;
                         body.Density = data["Density"].as<float>();
-                        body.Dynamic = data["Type"].as<bool>();
+                        body.Dynamic = data["Dynamic"].as<bool>();
                     }
 
                     // deserialize collider
@@ -382,9 +384,93 @@ namespace Empy
             }  
         }
 
-        EMPY_INLINE void Deserialze(AssetRegistry& assets, const std::string& path)
+        EMPY_INLINE void Deserialize(AssetRegistry& registry, const std::string& path)
         {
+            try 
+            {
+                auto root = YAML::LoadFile(path);
+                auto& nodes = root["ASSETS"];
 
+                // deserialize nodes
+                for(auto& node : nodes)
+                {
+                    Asset* asset = nullptr;
+                    auto props = node["Properties"]; 
+                    auto uid = node["UID"].as<AssetID>();
+                    auto name = node["Name"].as<std::string>();
+                    auto source = node["Source"].as<std::string>();
+
+                    // get asset type
+                    auto typeName = node["Type"].as<std::string>();
+                    auto opt = magic_enum::enum_cast<AssetType>(typeName);
+                    auto type = (opt.has_value()) ? opt.value() : AssetType::UNKNOWN;                    
+
+                    // create instance
+                    if(type == AssetType::MATERIAL && props) 
+                    { 
+                        auto mtlAsset = registry.AddMaterial(uid, source);
+
+                        // set material textures
+                        mtlAsset->RoughnessMap = props["RoughnessMap"].as<AssetID>();
+                        mtlAsset->OcclusionMap = props["OcclusionMap"].as<AssetID>();
+                        mtlAsset->EmissiveMap = props["EmissiveMap"].as<AssetID>();
+                        mtlAsset->MetallicMap = props["MetallicMap"].as<AssetID>();
+                        mtlAsset->AlbedoMap = props["AlbedoMap"].as<AssetID>();
+                        mtlAsset->NormalMap = props["NormalMap"].as<AssetID>();
+
+                        // set material props
+                        mtlAsset->Data.Emissive = props["Emissive"].as<glm::vec3>();
+                        mtlAsset->Data.Occlusion = props["Occlusion"].as<float>();
+                        mtlAsset->Data.Roughness = props["Roughness"].as<float>();
+                        mtlAsset->Data.Metallic = props["Metallic"].as<float>();
+                        mtlAsset->Data.Albedo = props["Albedo"].as<glm::vec3>();
+
+                        // cast asset
+                        asset = (Asset*)mtlAsset.get();
+                    }
+                    else if(type == AssetType::TEXTURE && props) 
+                    { 
+                        // set properties
+                        bool isHDR = props["IsHDR"].as<bool>();
+                        bool flipV = props["FlipV"].as<bool>();
+                        asset = (Asset*)registry.AddTexture(uid, source, isHDR, flipV).get();                     
+                    }
+                    else if(type == AssetType::SKYBOX && props) 
+                    { 
+                        // set properties
+                        bool isHDR = props["IsHDR"].as<bool>();
+                        bool flipV = props["FlipV"].as<bool>();
+                        auto size = props["Size"].as<int32_t>();
+                        asset = (Asset*)registry.AddSkybox(uid, source, size, isHDR, flipV).get();    
+                    }
+                    else if(type == AssetType::MODEL && props) 
+                    { 
+                        bool hasJoints = props["HasJoints"].as<bool>();
+                        asset = (Asset*)registry.AddModel(uid, source, hasJoints).get();    
+                    }
+                    else if(type == AssetType::SCRIPT) 
+                    { 
+                        asset = (Asset*)registry.AddScript(uid, source).get();
+                    }
+                    else if(type == AssetType::SCENE) 
+                    { 
+                        asset = (Asset*)registry.AddScene(uid, source).get();
+                    }
+                    else 
+                    {
+                        EMPY_ERROR("failed to deserialize asset: invalid type");
+                        return;
+                    }
+
+                    // set asset properties
+                    asset->Source = source;
+                    asset->Name = name;
+                }
+            }
+            catch (YAML::ParserException& e) 
+            {
+                EMPY_ERROR("failed to deserialize assets!");
+            }  
         }
     };
 }
