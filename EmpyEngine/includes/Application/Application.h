@@ -6,7 +6,7 @@ namespace Empy
     struct Application : AppInterface
     {
         // runs application main loop
-        EMPY_INLINE void RunContext()
+        EMPY_INLINE void RunContext(bool showFrame)
         {          
             // application main loop
             while(m_Context->Window->PollEvents())
@@ -20,8 +20,13 @@ namespace Empy
                 // render scene 
                 RenderScene();
 
-                // update layers
-                UpdateLayers();
+                for(auto layer : m_Context->Layers)
+                {
+                    layer->OnUpdate();
+                }    
+
+                // show only for game
+                m_Context->Renderer->ShowFrame(showFrame);
             }
         }
 
@@ -192,7 +197,7 @@ namespace Empy
                 auto cube = CreateEntt<Entity>();
                 cube.Attach<InfoComponent>().Name = "Entity" + std::to_string(i);
                 cube.Attach<ColliderComponent>().Collider.Type = ColliderType::BOX;
-                //cube.Attach<ScriptComponent>().Script = scriptAsset->UID;
+                cube.Attach<ScriptComponent>().Script = scriptAsset->UID;
                 cube.Attach<RigidBodyComponent>();
                 auto& modelComp = cube.Attach<ModelComponent>();
                 modelComp.Material = mtlAsset->UID;
@@ -207,15 +212,16 @@ namespace Empy
         }
         
         // updates all application layers
-        EMPY_INLINE void UpdateLayers()
-        {
-            for(auto layer : m_Context->Layers)
-            {
-                layer->OnUpdate();
-            }    
-            // show scene to screen
-            m_Context->Renderer->ShowFrame();
-        }      
+        // EMPY_INLINE void UpdateLayers()
+        // {            
+        //     for(auto layer : m_Context->Layers)
+        //     {
+        //         layer->OnUpdate();
+        //     }    
+
+        //     // show only for game
+        //     m_Context->Renderer->ShowFrame();
+        // }      
 
         // updates physcis, scripts, etc.
         EMPY_INLINE void UpdateScene()
@@ -343,7 +349,7 @@ namespace Empy
         EMPY_INLINE void StartScene()
         {
             // create scene entities
-            CreateEntities();
+            //CreateEntities();
 
             // deserialize scene 
             m_Context->Serializer->Deserialize(*m_Context->Assets, "Resources/Projects/assets.yaml");

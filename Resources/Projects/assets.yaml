@@ -1,5 +1,5 @@
 ASSETS:
-  - UID: 3203648000287975621
+  - UID: 16200008057452682825
     Type: MATERIAL
     Name: Nimrod
     Source: Nimrod
@@ -15,29 +15,29 @@ ASSETS:
       Metallic: 0.600000024
       Emissive: [0, 0, 0]
       Albedo: [0, 1, 1]
-  - UID: 6859465390222840426
+  - UID: 2218055208962035283
     Type: MODEL
     Name: Walking
     Source: Resources/Models/Walking.fbx
     Properties:
       HasJoints: true
-  - UID: 10918668268976596116
+  - UID: 12630123459360288619
     Type: MODEL
     Name: sphere
     Source: Resources/Models/sphere.fbx
     Properties:
       HasJoints: false
-  - UID: 10562925605299858384
+  - UID: 6604721408139891085
     Type: MODEL
     Name: cube
     Source: Resources/Models/cube.fbx
     Properties:
       HasJoints: false
-  - UID: 12834013311619044530
+  - UID: 6619845424792772684
     Type: SCRIPT
     Name: TestScript
     Source: Resources/Scripts/TestScript.lua
-  - UID: 12699942177245588509
+  - UID: 3951363167892711606
     Type: SKYBOX
     Name: Sky
     Source: Resources/Textures/HDRs/Sky.hdr

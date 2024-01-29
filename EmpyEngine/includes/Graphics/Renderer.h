@@ -29,6 +29,7 @@ namespace Empy
             glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
             m_Bloom = std::make_unique<BloomShader>("Resources/Shaders/bloom.glsl", width, height);
+            m_Final = std::make_unique<FinalShader>("Resources/Shaders/final.glsl", width, height);
 
             m_Prefil = std::make_unique<PrefilteredShader>("Resources/Shaders/prefiltered.glsl");
             m_Irrad = std::make_unique<IrradianceShader>("Resources/Shaders/irradiance.glsl");
@@ -37,7 +38,6 @@ namespace Empy
             m_Brdf = std::make_unique<BrdfShader>("Resources/Shaders/brdf.glsl");
 
             m_Shadow = std::make_unique<ShadowShader>("Resources/Shaders/shadow.glsl");
-            m_Final = std::make_unique<FinalShader>("Resources/Shaders/final.glsl");
             m_Pbr = std::make_unique<PbrShader>("Resources/Shaders/pbr.glsl");
 
             m_Frame = std::make_unique<FrameBuffer>(width, height);  
@@ -126,6 +126,7 @@ namespace Empy
         {
             m_Frame->Resize(width, height);      
             m_Bloom->Resize(width, height);      
+            m_Final->Resize(width, height);      
         }
 
         // --
@@ -157,13 +158,14 @@ namespace Empy
 
         EMPY_INLINE uint32_t GetFrame() 
         {
-            return m_Frame->GetTexture();
+            //return m_Frame->GetTexture();
+            return m_Final->GetMap();
         }
         
-        EMPY_INLINE void ShowFrame()
+        EMPY_INLINE void ShowFrame(bool useFBO)
         {
             glViewport(0, 0, m_Frame->Width(), m_Frame->Height());         
-            m_Final->Show(m_Frame->GetTexture(), m_Bloom->GetMap());
+            m_Final->Render(m_Frame->GetTexture(), m_Bloom->GetMap(), useFBO);
         }          
 
         EMPY_INLINE void NewFrame()

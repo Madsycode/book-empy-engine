@@ -34,6 +34,13 @@ namespace Empy
                 task(std::move(Entt(&m_Context->Scene, entity)), comp);
             });
         }
+
+        // loop through entities
+        template<typename Task>
+        EMPY_INLINE void AssetView(Task&& task) 
+        {
+            m_Context->Assets->View([&] (auto asset) { task(asset); });
+        }
         
         // --
 
@@ -131,10 +138,16 @@ namespace Empy
             return nullptr;
         }
 
-    protected:
+        // --
+
         EMPY_INLINE GLFWwindow* GetWindowHandle() 
         {
             return m_Context->Window->Handle();
+        }
+
+        EMPY_INLINE uint32_t GetSceneFrame() 
+        {
+            return m_Context->Renderer->GetFrame();
         }
 
     protected:

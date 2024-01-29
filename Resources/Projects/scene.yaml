@@ -1,6 +1,6 @@
 ENTITIES:
   - InfoComponent:
-      UID: 10685569070467818381
+      UID: 1495740821900188964
       Name: Entity9
       Parent: 0
     TransformComponent:
@@ -15,11 +15,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 2697344576064221484
+      UID: 12697695874562147300
       Name: Entity8
       Parent: 0
     TransformComponent:
@@ -34,11 +36,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 6760771199873396261
+      UID: 16045524936423322739
       Name: Entity7
       Parent: 0
     TransformComponent:
@@ -53,11 +57,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 7111450605207840652
+      UID: 9732912733028461264
       Name: Entity6
       Parent: 0
     TransformComponent:
@@ -72,11 +78,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 12452990866709460238
+      UID: 5999664061021824635
       Name: Entity5
       Parent: 0
     TransformComponent:
@@ -91,11 +99,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 16509458020545648670
+      UID: 6054714151481057602
       Name: Entity4
       Parent: 0
     TransformComponent:
@@ -110,11 +120,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 4660430912477497187
+      UID: 17788767046631404640
       Name: Entity3
       Parent: 0
     TransformComponent:
@@ -129,11 +141,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 6321210712118312180
+      UID: 8905490045583085245
       Name: Entity2
       Parent: 0
     TransformComponent:
@@ -148,11 +162,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 8791695209023553548
+      UID: 4533255652713959978
       Name: Entity1
       Parent: 0
     TransformComponent:
@@ -167,11 +183,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 8778509998398682635
+      UID: 4414326770463815743
       Name: Entity0
       Parent: 0
     TransformComponent:
@@ -186,11 +204,13 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
+    ScriptComponent:
+      Script: 6619845424792772684
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 5968122565284246900
+      UID: 4153051824607260694
       Name: Entity
       Parent: 0
     TransformComponent:
@@ -205,13 +225,11 @@ ENTITIES:
       StaticFriction: 0.300000012
       Restitution: 0.400000006
       Type: BOX
-    ScriptComponent:
-      Script: 12834013311619044530
     ModelComponent:
-      Material: 3203648000287975621
-      Model: 10562925605299858384
+      Material: 16200008057452682825
+      Model: 6604721408139891085
   - InfoComponent:
-      UID: 7866954341339161795
+      UID: 8636673764698470451
       Name: Entity
       Parent: 0
     TransformComponent:
@@ -220,9 +238,9 @@ ENTITIES:
       Scale: [0.100000001, 0.100000001, 0.100000001]
     ModelComponent:
       Material: 0
-      Model: 6859465390222840426
+      Model: 2218055208962035283
   - InfoComponent:
-      UID: 3919370627793307020
+      UID: 13562737347702741122
       Name: Entity
       Parent: 0
     TransformComponent:
@@ -234,7 +252,7 @@ ENTITIES:
       Radiance: [1, 1, 1]
       Bias: 0.0500000007
   - InfoComponent:
-      UID: 7357138349428238437
+      UID: 14842578060507497029
       Name: Entity
       Parent: 0
     TransformComponent:
@@ -242,9 +260,9 @@ ENTITIES:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     SkyboxComponent:
-      Skybox: 12699942177245588509
+      Skybox: 3951363167892711606
   - InfoComponent:
-      UID: 1530758248117617964
+      UID: 2483857131169257103
       Name: Entity
       Parent: 0
     CameraComponent:

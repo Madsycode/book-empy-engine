@@ -25,15 +25,12 @@ uniform sampler2D u_bloom;
 
 void main() 
 { 
+  // sample color from map
   vec3 result = texture(u_map, uvs).rgb + texture(u_bloom, uvs).rgb;
 
-  // sample color from map
-  result = pow(result, vec3(GAMMA));
-
-  // process exposure
-  result = vec3(1.0) - exp(-result * EXPOSURE); 
-
   // gamma correction
+  result = pow(result, vec3(GAMMA));
+  result = vec3(1.0) - exp(-result * EXPOSURE); 
   result = pow(result, vec3(1.0 / max(GAMMA, MIN_GAMMA)));
 
   // fragment color

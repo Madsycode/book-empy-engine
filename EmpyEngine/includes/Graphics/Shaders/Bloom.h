@@ -22,7 +22,7 @@ namespace Empy
             m_Width = (width / m_Scale);
 
             // create frame buffer
-            glGenFramebuffers(2, m_FrameBuffer);
+            glGenFramebuffers(2, m_GausianFBO);
 
             // create horizontal texture
             glGenTextures(2, m_PingPongMaps);
@@ -30,7 +30,7 @@ namespace Empy
             for(auto i = 0; i < 2; i++)
             {
                 // bind target frame buffer
-                glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBuffer[i]);
+                glBindFramebuffer(GL_FRAMEBUFFER, m_GausianFBO[i]);
 
                 // bind current texture 
                 glBindTexture(GL_TEXTURE_2D, m_PingPongMaps[i]);
@@ -81,7 +81,7 @@ namespace Empy
 
 			for (uint32_t i = 0u; i < stepCount; i++) 
             {
-                glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBuffer[horizontal]); 
+                glBindFramebuffer(GL_FRAMEBUFFER, m_GausianFBO[horizontal]); 
                 glUniform1i(u_HorizontalPass, horizontal);
 
 				if (i > 0) 
@@ -122,8 +122,8 @@ namespace Empy
 
         EMPY_INLINE ~BloomShader()
         {
-            glDeleteFramebuffers(2, m_FrameBuffer); 
             glDeleteTextures(2, m_PingPongMaps); 
+            glDeleteFramebuffers(2, m_GausianFBO); 
         }
 
     private:
@@ -133,7 +133,7 @@ namespace Empy
         uint32_t u_FrameWidth = 0u;  
 
         uint32_t m_PingPongMaps[2]; 
-        uint32_t m_FrameBuffer[2];
+        uint32_t m_GausianFBO[2];
 
         int32_t m_Height = 0;
         int32_t m_Width = 0;

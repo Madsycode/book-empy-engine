@@ -15,9 +15,6 @@ function TestScript.OnUpdate(self, dt)
     if Inputs.IsKey(Inputs.KEY_D) then
         self:ApplyForce(Vec3.new(100.0, 0.0, 0.0));
     end
-
-    -- scale object every frame
-    self.Transform.Scale.y = self.Transform.Scale.y + dt;
 end 
 
 -- call when key down
@@ -33,7 +30,7 @@ end
 -- call when colliding
 function TestScript.OnCollision(self, other)
     print("collision:", self.Entity, "->", other)
-    self:Destroy(other);
+    --self:Destroy(other);
 end
 
 -- call when key down

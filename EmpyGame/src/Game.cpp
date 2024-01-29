@@ -2,6 +2,9 @@
 
 int32_t main(int32_t argc, char** argv) 
 {
-    EMPY_DEBUG("game.exe!");
+    using namespace Empy;
+    auto app = new Application();
+    app->RunContext(true);
+    EMPY_DELETE(app);
     return 0;
 }

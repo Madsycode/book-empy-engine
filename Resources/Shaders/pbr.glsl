@@ -55,8 +55,8 @@ layout (location = 1) out vec4 out_brightness;
 
 // constants
 const vec3 BLOOM_THRESHOD = vec3(0.2126, 0.7152, 0.0722);
-#define PI 3.14159265358979323846
-#define MAX_LIGHTS 10
+const float PI = 3.14159265358979323846;
+const int MAX_LIGHTS = 10;
 
 // direct light type
 struct DirectLight
@@ -328,6 +328,7 @@ vec3 ComputeSpotLights(vec3 N, vec3 V, vec3 F0, vec3 albedo, float roughness, fl
   return result;
 }
 
+// compute shadow
 float ComputeShadow()
 {
   vec4 position = u_lightSpace * vec4(vertex.Position, 1.0); 
@@ -427,7 +428,7 @@ void main()
   }
   else
   {
-    out_brightness = vec4(0.0, 0.0, 0.0, 1.0); 
+    out_brightness = vec4(0.0); 
   }
 
   // output fragment 
