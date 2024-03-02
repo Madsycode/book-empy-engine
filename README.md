@@ -17,6 +17,11 @@
 8. Serialization (YAML)
 ...
 
+This engine's implementation is documented in the following book: 
+![Preview](https://github.com/Madsycode/book-empy-engine/blob/master/book.png)
+
+Goto Amazon: https://www.amazon.com/dp/B0CTXDT8JM
+
 [![Twitter](https://img.shields.io/badge/madsycode--blue.svg?style=social&logo=Twitter)](https://twitter.com/MadsyCode)
 [![Youtube](https://img.shields.io/badge/madsycode--red.svg?style=social&logo=youtube)](https://www.youtube.com/c/madsycode)
 [![Discord](https://img.shields.io/badge/madsycode%20--blue.svg?style=social&logo=Discord)](https://discord.gg/pfr5tzEh)
