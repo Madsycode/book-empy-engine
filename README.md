@@ -1,3 +1,4 @@
+## This project uses conan 1.61.0 for dependecies
 # 3D GAME ENGINE DEVELOPMENT
 
 # [![Hex.pm](https://img.shields.io/hexpm/l/plug?color=orange&logo=madsycode&logoColor=red&style=plastic)](https://github.com/Madsycode/orbit-dev/blob/2a7f85551977d0d1274db3fe6cd2da9020d23541/LICENSE)
