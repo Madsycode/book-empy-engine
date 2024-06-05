@@ -1,8 +1,8 @@
-## This project uses conan 1.61.0 for dependencies Management
+## This project uses conan 1.61.0 for dependencies management
 # 3D GAME ENGINE DEVELOPMENT
 
 # [![Hex.pm](https://img.shields.io/hexpm/l/plug?color=orange&logo=madsycode&logoColor=red&style=plastic)](https://github.com/Madsycode/orbit-dev/blob/2a7f85551977d0d1274db3fe6cd2da9020d23541/LICENSE)
-**Empy Engine** is a corss-platform 3D graphical engine build with OpenGL using C++.
+**Empy Engine** is a corss-platform 3D graphical engine build with C++ using OpenGL.
 
 ![Preview](https://github.com/Madsycode/book-empy-engine/blob/master/preview.png)
 
